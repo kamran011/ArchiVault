@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tailwind v3 + PostCSS — layers above must stay first so utilities compile */
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /** Marketing: near-black base + subtle grid + radial depth */
+  .landing-surface {
+    background-color: #0a0a0a;
+    background-image:
+      radial-gradient(ellipse 90% 55% at 50% -20%, rgb(6 182 212 / 0.12), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 100% 0%, rgb(124 58 237 / 0.08), transparent 45%),
+      linear-gradient(to right, rgb(39 39 42 / 0.5) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(39 39 42 / 0.5) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      100% 100%,
+      64px 64px,
+      64px 64px;
+    background-position: center top, center, -1px -1px, -1px -1px;
+  }
+}
+
+@layer base {
+  .theme {
+    --font-heading: var(--font-inter);
+  }
+  :root {
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --background: #fafafa;
+    --foreground: #18181b;
+    --card: #ffffff;
+    --card-foreground: #18181b;
+    --popover: #ffffff;
+    --popover-foreground: #18181b;
+    --primary: #18181b;
+    --primary-foreground: #fafafa;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #18181b;
+    --muted: #f4f4f5;
+    --muted-foreground: #71717a;
+    --accent: #f4f4f5;
+    --accent-foreground: #18181b;
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: #fafafa;
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --ring: #06b6d4;
+    --radius: 0.75rem;
+    --sidebar: #fafafa;
+    --sidebar-foreground: #18181b;
+    --sidebar-primary: #18181b;
+    --sidebar-primary-foreground: #fafafa;
+    --sidebar-accent: #f4f4f5;
+    --sidebar-accent-foreground: #18181b;
+    --sidebar-border: #e4e4e7;
+    --sidebar-ring: #06b6d4;
+  }
+
+  .dark {
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --background: #0a0a0a;
+    --foreground: #f4f4f5;
+    --card: #111111;
+    --card-foreground: #f4f4f5;
+    --popover: #111111;
+    --popover-foreground: #f4f4f5;
+    --primary: #06b6d4;
+    --primary-foreground: #0a0a0a;
+    --secondary: #1a1a1a;
+    --secondary-foreground: #f4f4f5;
+    --muted: #1a1a1a;
+    --muted-foreground: #71717a;
+    --accent: #1a1a1a;
+    --accent-foreground: #f4f4f5;
+    --destructive: #ef4444;
+    --destructive-foreground: #fafafa;
+    --border: #27272a;
+    --input: #27272a;
+    --ring: #06b6d4;
+    --sidebar: #18181b;
+    --sidebar-foreground: #f4f4f5;
+    --sidebar-primary: #06b6d4;
+    --sidebar-primary-foreground: #0a0a0a;
+    --sidebar-accent: #27272a;
+    --sidebar-accent-foreground: #f4f4f5;
+    --sidebar-border: #27272a;
+    --sidebar-ring: #06b6d4;
+  }
+
+  * {
+    @apply border-border;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Reinforce on controls (some UAs ignore * for widgets / ARIA roles). */
+  button,
+  input,
+  textarea,
+  select,
+  optgroup,
+  option,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"] {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::placeholder {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
