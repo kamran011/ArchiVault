@@ -62,8 +62,10 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
           <Label htmlFor="desc" className="text-sm font-medium text-foreground/90">
             Describe the system you want to build
           </Label>
-          {generationLimitReached ? (
-            <p className="text-xs text-zinc-500">Upgrade to generate more architectures</p>
+          {generationLimitReached && generationLimitUi ? (
+            <p className="text-xs text-zinc-500">
+              {generationLimitUi.planLabel} plan · {generationLimitUi.summary}
+            </p>
           ) : null}
           <Textarea
             ref={ref}
@@ -156,8 +158,11 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
               role="note"
               className="rounded-lg border border-border bg-muted/60 px-4 py-3 text-sm text-muted-foreground"
             >
-              <p className="font-medium text-foreground">{generationLimitUi.summary}</p>
-              <p className="mt-2 leading-relaxed">{generationLimitUi.detail}</p>
+              <p className="font-semibold text-foreground">{generationLimitUi.planLabel} plan</p>
+              <p className="mt-1 font-medium text-foreground/95">{generationLimitUi.summary}</p>
+              {generationLimitUi.detail ? (
+                <p className="mt-2 leading-relaxed">{generationLimitUi.detail}</p>
+              ) : null}
               <PricingCtaLink
                 href={generationLimitUi.ctaHref}
                 className={cn(

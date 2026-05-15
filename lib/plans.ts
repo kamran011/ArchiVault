@@ -102,7 +102,11 @@ export function isGenerationLimitReached(plan: UserPlan, generationCount: number
 }
 
 export type GenerationLimitUi = {
+  /** Display name: Free, Blueprint, Pro, Team */
+  planLabel: string
+  /** Usage line (e.g. 1/1 …, 4/4 …). */
   summary: string
+  /** Upgrade path sentence(s); optional if summary is fully self-contained. */
   detail: string
   ctaLabel: string
   ctaHref: string
@@ -115,38 +119,37 @@ export function generationLimitUi(plan: UserPlan): GenerationLimitUi {
   switch (plan) {
     case "free":
       return {
-        summary: "1/1 free generation used. Upgrade to continue.",
+        planLabel: "Free",
+        summary: "1/1 free generation used.",
         detail:
-          "You've used your 1 free generation. Upgrade to Blueprint ($49) for 4 more, or Pro ($29/mo) for unlimited.",
+          "Upgrade to Blueprint ($49) for 4 more, or Pro ($29/mo) for unlimited.",
         ctaLabel: "Upgrade now",
         ctaHref: pricingHref,
       }
     case "blueprint":
       return {
+        planLabel: "Blueprint",
         summary: "4/4 generations used.",
-        detail:
-          "You've used all four Blueprint-pack generations. Buy more Blueprint or upgrade to Pro for unlimited architectures.",
+        detail: "Buy more Blueprint or upgrade to Pro for unlimited architectures.",
         ctaLabel: "View plans",
         ctaHref: pricingHref,
       }
     default:
       return {
+        planLabel: plan.charAt(0).toUpperCase() + plan.slice(1),
         summary: "Generation limit reached.",
-        detail: "Please upgrade your plan to continue.",
+        detail: "Upgrade your plan below to continue.",
         ctaLabel: "View plans",
         ctaHref: pricingHref,
       }
   }
 }
 
+/** Single string for API errors (403). */
 export function generationLimitMessage(plan: UserPlan): string {
-  if (plan === "free") {
-    return "Generation limit reached. Upgrade to Blueprint or Pro to continue."
-  }
-  if (plan === "blueprint") {
-    return "Blueprint generations used. Upgrade to Pro for unlimited architectures."
-  }
-  return "Generation limit reached."
+  const ui = generationLimitUi(plan)
+  const body = [ui.summary, ui.detail].filter((s) => s.length > 0).join(" ")
+  return `${ui.planLabel} plan: ${body}`
 }
 
 export function nextUpgradePlan(plan: UserPlan): CheckoutPlan | null {
