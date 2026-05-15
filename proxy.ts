@@ -5,23 +5,29 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/privacy(.*)",
+  "/terms(.*)",
   "/api/stripe/webhook(.*)",
   "/api/clerk/webhook(.*)",
   "/api/webhooks/clerk(.*)",
 ])
 
-export default clerkMiddleware(async (auth, request) => {
-  const p = request.nextUrl.pathname
-  // Next may still invoke this middleware for `/_next/static/*` despite matcher tweaks.
-  // If we call `auth.protect()` there, Clerk rewrites the request and CSS/JS returns 404 → unstyled app.
-  if (p.startsWith("/_next/static") || p.startsWith("/_next/image") || p === "/favicon.ico") {
-    return NextResponse.next()
-  }
+export default clerkMiddleware(
+  async (auth, request) => {
+    const p = request.nextUrl.pathname
+    // Next may still invoke this middleware for `/_next/static/*` despite matcher tweaks.
+    // If we call `auth.protect()` there, Clerk rewrites the request and CSS/JS returns 404 → unstyled app.
+    if (p.startsWith("/_next/static") || p.startsWith("/_next/image") || p === "/favicon.ico") {
+      return NextResponse.next()
+    }
 
-  if (!isPublicRoute(request)) {
-    await auth.protect()
-  }
-})
+    if (!isPublicRoute(request)) {
+      await auth.protect()
+    }
+  },
+  // Required on custom domains (archivolt.dev). Auto-proxy only enables for *.vercel.app.
+  { frontendApiProxy: { enabled: true } },
+)
 
 export const config = {
   matcher: [
