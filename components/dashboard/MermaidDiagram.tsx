@@ -121,7 +121,21 @@ function cloneSvgForExport(svg: SVGSVGElement): SVGSVGElement {
   return svg.cloneNode(true) as SVGSVGElement;
 }
 
-function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; width: number; height: number } {
+/** Chrome/Safari taint the canvas when the SVG draws foreignObject (HTML subtree) or external `<image>` URLs. */
+function stripSvgContentThatTaintsCanvas(svgRoot: SVGSVGElement) {
+  svgRoot.querySelectorAll("foreignObject").forEach((el) => el.remove());
+  svgRoot.querySelectorAll("script").forEach((el) => el.remove());
+
+  svgRoot.querySelectorAll("image").forEach((el) => {
+    const href = el.getAttribute("href") ?? el.getAttribute("xlink:href") ?? "";
+    if (/^https?:\/\//i.test(href.trim())) el.remove();
+  });
+}
+
+function applyLightExportTheme(
+  clonedSvg: SVGSVGElement,
+  options?: { stripForCanvasRaster?: boolean },
+): { svgData: string; width: number; height: number } {
   const { width, height } = getSvgDimensions(clonedSvg);
   clonedSvg.setAttribute("width", String(width));
   clonedSvg.setAttribute("height", String(height));
@@ -137,7 +151,7 @@ function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; wid
   bg.setAttribute("fill", "#ffffff");
   clonedSvg.insertBefore(bg, clonedSvg.firstChild);
 
-  // If Mermaid still emitted foreignObject labels, keep them visible on white (do not strip — that removes text).
+  // Theme foreignObject labels for SVG download only; PNG path strips FO afterward to avoid tainted canvas.
   clonedSvg.querySelectorAll("foreignObject").forEach((fo) => {
     const html = fo as SVGForeignObjectElement;
     html.style.color = "#1a1a1a";
@@ -181,6 +195,10 @@ function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; wid
     node.setAttribute("fill", "#1a1a1a");
   });
 
+  if (options?.stripForCanvasRaster) {
+    stripSvgContentThatTaintsCanvas(clonedSvg);
+  }
+
   const svgData = new XMLSerializer().serializeToString(clonedSvg);
 
   return { svgData, width, height };
@@ -190,8 +208,18 @@ function prepareLightExportSvg(svg: SVGSVGElement): { svgData: string; width: nu
   return applyLightExportTheme(cloneSvgForExport(svg));
 }
 
+/** Same light theme but safe to draw onto a 2D canvas (no foreignObject / cross-origin images). */
+function prepareLightExportSvgForCanvas(svg: SVGSVGElement): {
+  svgData: string;
+  width: number;
+  height: number;
+} {
+  return applyLightExportTheme(cloneSvgForExport(svg), { stripForCanvasRaster: true });
+}
+
 function lightExportSvgToPngBlob(svg: SVGSVGElement): Promise<Blob | null> {
-  const { svgData, width, height } = prepareLightExportSvg(svg);
+  const { svgData, width, height } = prepareLightExportSvgForCanvas(svg);
+  const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgData)}`;
 
   return new Promise((resolve) => {
     const canvas = document.createElement("canvas");
@@ -202,27 +230,36 @@ function lightExportSvgToPngBlob(svg: SVGSVGElement): Promise<Blob | null> {
     }
 
     const img = new Image();
-    const url = URL.createObjectURL(new Blob([svgData], { type: "image/svg+xml;charset=utf-8" }));
 
     img.onload = () => {
       const w = width || img.naturalWidth || img.width;
       const h = height || img.naturalHeight || img.height;
+      if (!w || !h) {
+        resolve(null);
+        return;
+      }
       canvas.width = w * 2;
       canvas.height = h * 2;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(2, 2);
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, w, h);
-      ctx.drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      canvas.toBlob((blob) => resolve(blob), "image/png");
+      try {
+        ctx.drawImage(img, 0, 0, w, h);
+      } catch {
+        resolve(null);
+        return;
+      }
+      try {
+        canvas.toBlob((blob) => resolve(blob), "image/png");
+      } catch {
+        resolve(null);
+      }
     };
 
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve(null);
-    };
+    img.onerror = () => resolve(null);
 
-    img.src = url;
+    img.src = dataUrl;
   });
 }
 
