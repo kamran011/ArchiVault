@@ -104,7 +104,9 @@ export function isGenerationLimitReached(plan: UserPlan, generationCount: number
 export type GenerationLimitUi = {
   /** Display name: Free, Blueprint, Pro, Team */
   planLabel: string
-  /** Usage line (e.g. 1/1 …, 4/4 …). */
+  /** Short usage for hero hint only, e.g. "1/1 generation used". */
+  usageHint: string
+  /** Usage line (longer context; API / internal). */
   summary: string
   /** Upgrade path sentence(s); optional if summary is fully self-contained. */
   detail: string
@@ -120,6 +122,7 @@ export function generationLimitUi(plan: UserPlan): GenerationLimitUi {
     case "free":
       return {
         planLabel: "Free",
+        usageHint: "1/1 generation used",
         summary: "1/1 free generation used.",
         detail:
           "Upgrade to Blueprint ($49) for 4 more, or Pro ($29/mo) for unlimited.",
@@ -129,17 +132,19 @@ export function generationLimitUi(plan: UserPlan): GenerationLimitUi {
     case "blueprint":
       return {
         planLabel: "Blueprint",
+        usageHint: "4/4 generations used",
         summary: "4/4 generations used.",
         detail: "Buy more Blueprint or upgrade to Pro for unlimited architectures.",
-        ctaLabel: "View plans",
+        ctaLabel: "Upgrade now",
         ctaHref: pricingHref,
       }
     default:
       return {
         planLabel: plan.charAt(0).toUpperCase() + plan.slice(1),
+        usageHint: "Generation limit reached",
         summary: "Generation limit reached.",
         detail: "Upgrade your plan below to continue.",
-        ctaLabel: "View plans",
+        ctaLabel: "Upgrade now",
         ctaHref: pricingHref,
       }
   }

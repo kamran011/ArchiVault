@@ -63,9 +63,21 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
             Describe the system you want to build
           </Label>
           {generationLimitReached && generationLimitUi ? (
-            <p className="text-xs text-zinc-500">
-              {generationLimitUi.planLabel} plan · {generationLimitUi.summary}
-            </p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2">
+              <p className="text-xs text-zinc-500">
+                {generationLimitUi.planLabel} plan · {generationLimitUi.usageHint}
+              </p>
+              <PricingCtaLink
+                href={generationLimitUi.ctaHref}
+                className={cn(
+                  buttonVariants({ size: "default" }),
+                  ctaButtonClass,
+                  "inline-flex w-full shrink-0 rounded-lg font-semibold sm:w-auto sm:min-w-[140px]",
+                )}
+              >
+                {generationLimitUi.ctaLabel}
+              </PricingCtaLink>
+            </div>
           ) : null}
           <Textarea
             ref={ref}
@@ -79,11 +91,11 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
             placeholder="E.g. An e-commerce platform where vendors list products, customers buy, we take a fee, and we notify both parties at every step..."
             className={cn("resize-none font-mono text-sm leading-relaxed", fieldClass)}
           />
-          <p className="text-xs text-muted-foreground">
-            {!generationLimitReached
-              ? "Minimum 10 characters. Plain language works best."
-              : "Upgrade your plan below to describe another system."}
-          </p>
+          {!generationLimitReached ? (
+            <p className="text-xs text-muted-foreground">
+              Minimum 10 characters. Plain language works best.
+            </p>
+          ) : null}
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
@@ -152,29 +164,6 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
           >
             {disabled ? "Generating…" : "Generate Architecture"}
           </Button>
-
-          {generationLimitReached && generationLimitUi ? (
-            <div
-              role="note"
-              className="rounded-lg border border-border bg-muted/60 px-4 py-3 text-sm text-muted-foreground"
-            >
-              <p className="font-semibold text-foreground">{generationLimitUi.planLabel} plan</p>
-              <p className="mt-1 font-medium text-foreground/95">{generationLimitUi.summary}</p>
-              {generationLimitUi.detail ? (
-                <p className="mt-2 leading-relaxed">{generationLimitUi.detail}</p>
-              ) : null}
-              <PricingCtaLink
-                href={generationLimitUi.ctaHref}
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  ctaButtonClass,
-                  "mt-3 inline-flex w-full rounded-lg font-semibold sm:w-auto sm:min-w-[160px]",
-                )}
-              >
-                {generationLimitUi.ctaLabel}
-              </PricingCtaLink>
-            </div>
-          ) : null}
         </div>
       </div>
     );

@@ -10,11 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { PromptInput } from "./PromptInput";
 import type { PromptPayload } from "./types";
 import type { UserPlan } from "@/lib/plan-gate";
-import {
-  generationLimitUi,
-  isGenerationLimitReached,
-  type GenerationLimitUi,
-} from "@/lib/plans";
+import { generationLimitUi, isGenerationLimitReached } from "@/lib/plans";
 import { ArchivoltLogo } from "@/components/brand/ArchivoltLogo";
 import { BrandWordmark } from "@/components/brand/BrandWordmark";
 import { DeleteGenerationDialog } from "./DeleteGenerationDialog";
@@ -22,22 +18,6 @@ import { ArchitectureOutput } from "./ArchitectureOutput";
 import { DashboardSidebar, type GenerationRow } from "./DashboardSidebar";
 import { StreamingPreview } from "./StreamingPreview";
 import { FadeIn } from "@/components/shared/FadeIn";
-
-function GenerationLimitDashboardBlurb({
-  limitUx,
-  className,
-}: {
-  limitUx: GenerationLimitUi;
-  className?: string;
-}) {
-  const body = [limitUx.summary, limitUx.detail].filter(Boolean).join(" ");
-  return (
-    <div className={cn("space-y-1", className)}>
-      <p className="font-semibold text-foreground">{limitUx.planLabel} plan</p>
-      <p className="text-muted-foreground leading-relaxed">{body}</p>
-    </div>
-  );
-}
 
 export function DashboardApp() {
   const exportId = React.useId().replace(/:/g, "");
@@ -322,9 +302,6 @@ export function DashboardApp() {
                 <div className="pl-6">
                   <BrandWordmark logoSize={20} textClassName="text-sm" className="mb-1" />
                   <h1 className="text-lg font-bold text-foreground">Architecture studio</h1>
-                  {generationLimitReached && limitUx ? (
-                    <GenerationLimitDashboardBlurb limitUx={limitUx} className="mt-2 pr-4 text-sm" />
-                  ) : null}
                 </div>
                 <Sheet open={mobileHistoryOpen} onOpenChange={setMobileHistoryOpen}>
                   <SheetTrigger
@@ -344,13 +321,9 @@ export function DashboardApp() {
                 <div className="pl-6">
                   <BrandWordmark logoSize={22} textClassName="text-base" className="mb-2" />
                   <h1 className="text-2xl font-bold tracking-tight text-foreground">Architecture studio</h1>
-                    {generationLimitReached && limitUx ? (
-                      <GenerationLimitDashboardBlurb limitUx={limitUx} className="mt-2 max-w-xl text-sm" />
-                    ) : (
-                      <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                        Describe volatility, freeze core workflows, and ship adapter-friendly boundaries.
-                      </p>
-                    )}
+                  <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                    Describe volatility, freeze core workflows, and ship adapter-friendly boundaries.
+                  </p>
                 </div>
                 <BadgePill />
               </div>
@@ -365,13 +338,9 @@ export function DashboardApp() {
                 <div className="rounded-xl border border-border bg-card p-6 shadow-lg shadow-black/20">
                   <div className="mb-6">
                     <h2 className="text-lg font-semibold text-foreground">System brief</h2>
-                    {generationLimitReached && limitUx ? (
-                      <GenerationLimitDashboardBlurb limitUx={limitUx} className="mt-1 text-sm" />
-                    ) : (
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Describe your system in plain English. The more detail, the better the output.
-                      </p>
-                    )}
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Describe your system in plain English. The more detail, the better the output.
+                    </p>
                   </div>
                   <PromptInput
                     ref={promptRef}
