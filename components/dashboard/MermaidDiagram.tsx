@@ -27,7 +27,8 @@ const MERMAID_CONFIG = {
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, monospace",
   flowchart: {
     useMaxWidth: false,
-    htmlLabels: true,
+    // SVG <text> labels export reliably; htmlLabels uses <foreignObject> and canvas/clipboard drops text.
+    htmlLabels: false,
     curve: "basis",
     padding: 18,
     nodeSpacing: 44,
@@ -126,20 +127,36 @@ function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; wid
   clonedSvg.setAttribute("height", String(height));
   clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   clonedSvg.style.background = "#ffffff";
+  clonedSvg.style.color = "#1a1a1a";
 
   const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  bg.setAttribute("width", "100%");
-  bg.setAttribute("height", "100%");
+  bg.setAttribute("x", "0");
+  bg.setAttribute("y", "0");
+  bg.setAttribute("width", String(width));
+  bg.setAttribute("height", String(height));
   bg.setAttribute("fill", "#ffffff");
   clonedSvg.insertBefore(bg, clonedSvg.firstChild);
+
+  // If Mermaid still emitted foreignObject labels, keep them visible on white (do not strip — that removes text).
+  clonedSvg.querySelectorAll("foreignObject").forEach((fo) => {
+    const html = fo as SVGForeignObjectElement;
+    html.style.color = "#1a1a1a";
+    html.querySelectorAll("*").forEach((child) => {
+      const el = child as HTMLElement;
+      el.style.color = "#1a1a1a";
+      el.style.setProperty("-webkit-text-fill-color", "#1a1a1a", "important");
+      el.style.backgroundColor = "transparent";
+    });
+  });
 
   clonedSvg.querySelectorAll("text, tspan").forEach((el) => {
     const node = el as SVGElement;
     node.style.fill = "#1a1a1a";
     node.setAttribute("fill", "#1a1a1a");
+    node.style.setProperty("fill", "#1a1a1a", "important");
   });
 
-  clonedSvg.querySelectorAll(".node rect, .node circle, .node polygon").forEach((el) => {
+  clonedSvg.querySelectorAll(".node rect, .node circle, .node polygon, .cluster rect").forEach((el) => {
     const node = el as SVGElement;
     node.style.fill = "#f4f4f5";
     node.style.stroke = "#d4d4d8";
@@ -158,14 +175,13 @@ function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; wid
     }
   });
 
-  clonedSvg.querySelectorAll(".edgeLabel text, .label text").forEach((el) => {
+  clonedSvg.querySelectorAll(".edgeLabel text, .label text, .nodeLabel text").forEach((el) => {
     const node = el as SVGElement;
     node.style.fill = "#1a1a1a";
     node.setAttribute("fill", "#1a1a1a");
   });
 
-  let svgData = new XMLSerializer().serializeToString(clonedSvg);
-  svgData = svgData.replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, "");
+  const svgData = new XMLSerializer().serializeToString(clonedSvg);
 
   return { svgData, width, height };
 }

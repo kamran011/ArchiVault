@@ -90,7 +90,7 @@ export function FaqSection() {
 
         <p className="mt-12 text-center text-sm text-muted-foreground">
           Still have questions?{" "}
-          <a href="mailto:hello@archivolt.dev" className="text-cyan-400 transition-colors hover:text-cyan-300">
+          <a href="mailto:support@archivolt.dev" className="text-cyan-400 transition-colors hover:text-cyan-300">
             Email us
           </a>
         </p>

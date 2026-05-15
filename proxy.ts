@@ -13,12 +13,14 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks/clerk(.*)",
 ])
 
+const isProduction = process.env.NODE_ENV === "production"
+
 export default clerkMiddleware(
   async (auth, request) => {
     const p = request.nextUrl.pathname
-    // Next may still invoke this middleware for `/_next/static/*` despite matcher tweaks.
-    // If we call `auth.protect()` there, Clerk rewrites the request and CSS/JS returns 404 → unstyled app.
-    if (p.startsWith("/_next/static") || p.startsWith("/_next/image") || p === "/favicon.ico") {
+    // Never run auth on Next internals — some `/_next/*` paths still hit middleware in dev/prod.
+    // Calling `auth.protect()` there can rewrite/404 chunks → HTML loads with zero CSS (broken UI).
+    if (p.startsWith("/_next/") || p === "/favicon.ico") {
       return NextResponse.next()
     }
 
@@ -26,15 +28,15 @@ export default clerkMiddleware(
       await auth.protect()
     }
   },
-  // Required on custom domains (archivolt.dev). Auto-proxy only enables for *.vercel.app.
-  { frontendApiProxy: { enabled: true } },
+  // Production custom domains (e.g. archivolt.dev) need this; on localhost it can interfere with dev chunks.
+  { frontendApiProxy: { enabled: isProduction } },
 )
 
 export const config = {
   matcher: [
-    // Skip static assets and the image optimizer. The broad Clerk/Next `(?!_next|…|\\.css)` matcher
-    // can still hit some `/_next/*` requests and break production CSS/JS (HTML loads, assets 404).
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // Skip all of `/_next/*` (static, webpack-hmr, turbopack, etc.), static files, and file-like URLs.
+    // Narrow `(?!_next/static|…)` misses dev-only paths and breaks JS/CSS with 404.
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
     "/__clerk/(.*)",
   ],

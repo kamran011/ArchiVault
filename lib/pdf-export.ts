@@ -66,6 +66,9 @@ export async function renderMermaidImageDataUrl(diagram: string): Promise<string
       theme: "neutral",
       securityLevel: "loose",
       fontFamily: "Inter, -apple-system, sans-serif",
+      flowchart: {
+        htmlLabels: false,
+      },
     });
 
     const { svg } = await mermaid.render(`pdf-mmd-${Date.now()}`, normalizeDiagram(diagram));
