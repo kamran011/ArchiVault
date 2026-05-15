@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import {
-  Copy,
   Download,
   Maximize2,
   Minimize2,
@@ -14,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sanitizeMermaidDiagram } from "@/lib/sanitize-mermaid";
-import { toBlob } from "html-to-image";
 
 type MermaidApi = {
   initialize: (config: Record<string, unknown>) => void | Promise<void>;
@@ -134,8 +132,7 @@ function cloneSvgForExport(svg: SVGSVGElement): SVGSVGElement {
   return svg.cloneNode(true) as SVGSVGElement;
 }
 
-/** Mutate a disconnected clone for light-themed export. */
-function applyLightExportThemeMutate(clonedSvg: SVGSVGElement): { width: number; height: number } {
+function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; width: number; height: number } {
   const { width, height } = getSvgDimensions(clonedSvg);
   const w = Math.max(1, Math.ceil(width));
   const h = Math.max(1, Math.ceil(height));
@@ -154,7 +151,7 @@ function applyLightExportThemeMutate(clonedSvg: SVGSVGElement): { width: number;
   bg.setAttribute("fill", "#ffffff");
   clonedSvg.insertBefore(bg, clonedSvg.firstChild);
 
-  // Edge labels may use foreignObject (HTML); theme so light PNG/SVG export is readable.
+  // Edge labels may use foreignObject (HTML); theme for readable light SVG exports.
   clonedSvg.querySelectorAll("foreignObject").forEach((fo) => {
     const html = fo as SVGForeignObjectElement;
     html.style.color = "#1a1a1a";
@@ -198,71 +195,12 @@ function applyLightExportThemeMutate(clonedSvg: SVGSVGElement): { width: number;
     node.setAttribute("fill", "#1a1a1a");
   });
 
-  return { width: w, height: h };
-}
-
-function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; width: number; height: number } {
-  const { width, height } = applyLightExportThemeMutate(clonedSvg);
   const svgData = new XMLSerializer().serializeToString(clonedSvg);
-  return { svgData, width, height };
+  return { svgData, width: w, height: h };
 }
 
 function prepareLightExportSvg(svg: SVGSVGElement): { svgData: string; width: number; height: number } {
   return applyLightExportTheme(cloneSvgForExport(svg));
-}
-
-/**
- * Rasterize via html-to-image. Target must be laid out in-document (not far off-screen); otherwise capture is often blank.
- */
-async function lightExportSvgToPngBlob(svg: SVGSVGElement): Promise<Blob | null> {
-  const clone = cloneSvgForExport(svg);
-  const { width, height } = applyLightExportThemeMutate(clone);
-
-  clone.style.display = "block";
-  clone.style.maxWidth = "none";
-  clone.style.width = `${width}px`;
-  clone.style.height = `${height}px`;
-
-  const host = document.createElement("div");
-  host.setAttribute("aria-hidden", "true");
-  host.style.boxSizing = "border-box";
-  host.style.position = "fixed";
-  host.style.left = "0";
-  host.style.top = "0";
-  host.style.margin = "0";
-  host.style.padding = "0";
-  host.style.width = `${width}px`;
-  host.style.height = `${height}px`;
-  host.style.overflow = "hidden";
-  host.style.backgroundColor = "#ffffff";
-  host.style.opacity = "1";
-  host.style.visibility = "visible";
-  host.style.pointerEvents = "none";
-  /** Off-viewport but still painted; far negative positions break layout rasterization (blank PNG). */
-  host.style.transform = "translate(-300vw, -300vh)";
-  host.appendChild(clone);
-
-  document.body.appendChild(host);
-
-  try {
-    if (typeof document.fonts?.ready !== "undefined") {
-      await document.fonts.ready.catch(() => {});
-    }
-    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
-
-    const blob = await toBlob(host, {
-      backgroundColor: "#ffffff",
-      pixelRatio: 2,
-      cacheBust: true,
-      width,
-      height,
-    });
-    return blob;
-  } catch {
-    return null;
-  } finally {
-    host.remove();
-  }
 }
 
 export function MermaidDiagram({
@@ -280,7 +218,6 @@ export function MermaidDiagram({
   const [loading, setLoading] = React.useState(true);
   const [normalizedSource, setNormalizedSource] = React.useState("");
   const [svgMarkup, setSvgMarkup] = React.useState<string | null>(null);
-  const [copied, setCopied] = React.useState(false);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [fullscreen, setFullscreen] = React.useState(false);
   const [zoomIndex, setZoomIndex] = React.useState(1);
@@ -402,33 +339,6 @@ export function MermaidDiagram({
     URL.revokeObjectURL(url);
   }
 
-  async function handleDownloadPNG() {
-    const svg = getExportSvg();
-    if (!svg) return;
-    const blob = await lightExportSvgToPngBlob(svg);
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${downloadBase}.png`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async function handleCopyImage() {
-    const svg = getExportSvg();
-    if (!svg) return;
-    try {
-      const blob = await lightExportSvgToPngBlob(svg);
-      if (!blob) return;
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard may be blocked
-    }
-  }
-
   function openModal() {
     setZoomIndex(1);
     setFullscreen(false);
@@ -465,24 +375,6 @@ export function MermaidDiagram({
           >
             <Maximize2 className="size-3.5" aria-hidden />
             Expand
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleCopyImage()}
-            disabled={loading || !!error}
-            className={actionBtnClass}
-          >
-            <Copy className="size-3.5" aria-hidden />
-            {copied ? "Copied!" : "Copy image"}
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleDownloadPNG()}
-            disabled={loading || !!error}
-            className={actionBtnClass}
-          >
-            <Download className="size-3.5" aria-hidden />
-            Download PNG
           </button>
           <button
             type="button"
@@ -531,7 +423,10 @@ export function MermaidDiagram({
         </div>
       </button>
 
-      <p className="text-xs text-muted-foreground">Click the preview or use Expand for a larger view with zoom.</p>
+      <p className="text-xs text-muted-foreground">
+        Click the preview or use Expand for a larger view with zoom. Export as SVG — open or convert to PNG where you
+        need a raster image.
+      </p>
 
       {/* Hidden source for full-resolution exports */}
       <div ref={exportRef} className="pointer-events-none fixed -left-[9999px] opacity-0" aria-hidden />
