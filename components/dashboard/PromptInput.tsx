@@ -22,19 +22,22 @@ import {
   TECH_STACK_OPTIONS,
 } from "@/lib/prompt-options";
 import type { GenerationLimitUi } from "@/lib/plans";
+import type { UserPlan } from "@/lib/plan-gate";
 import type { PromptPayload } from "./types";
 import { PricingCtaLink } from "@/components/shared/PricingCtaLink";
+import { FreeGenerationLimitCard } from "./FreeGenerationLimitCard";
 
 type PromptInputProps = {
   disabled: boolean;
   onSubmit: (payload: PromptPayload) => Promise<void> | void;
+  userPlan?: UserPlan;
   generationLimitReached?: boolean;
   generationLimitUi?: GenerationLimitUi | null;
 };
 
 export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProps>(
   function PromptInput(
-    { disabled, onSubmit, generationLimitReached = false, generationLimitUi },
+    { disabled, onSubmit, userPlan = "free", generationLimitReached = false, generationLimitUi },
     ref,
   ) {
     const [description, setDescription] = React.useState("");
@@ -55,6 +58,25 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
 
     const submitDisabled =
       generationLimitReached || disabled || description.trim().length < 10;
+
+    if (generationLimitReached && userPlan === "free" && generationLimitUi) {
+      return (
+        <div className="w-full">
+          {/* Keeps forwardRef typings; parent focus/scroll targets this inert field */}
+          <textarea
+            ref={ref}
+            readOnly
+            tabIndex={-1}
+            className="sr-only"
+            aria-hidden
+          />
+          <FreeGenerationLimitCard
+            planLabel={generationLimitUi.planLabel}
+            usageHint={generationLimitUi.usageHint}
+          />
+        </div>
+      );
+    }
 
     return (
       <div className="space-y-6">

@@ -262,6 +262,7 @@ export function DashboardApp() {
 
   const generationLimitReached = isGenerationLimitReached(userPlan, generationCount);
   const limitUx = generationLimitReached ? generationLimitUi(userPlan) : null;
+  const showFreeLimitUpsell = generationLimitReached && userPlan === "free" && limitUx;
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-background">
@@ -336,17 +337,20 @@ export function DashboardApp() {
             <div className={cn(studioColumnClass, "space-y-8")}>
               {isCreateMode ? (
                 <div className="rounded-xl border border-border bg-card p-6 shadow-lg shadow-black/20">
-                  <div className="mb-6">
+                  <div className={cn("mb-6", showFreeLimitUpsell && "mb-4")}>
                     <h2 className="text-lg font-semibold text-foreground">System brief</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Describe your system in plain English. The more detail, the better the output.
-                    </p>
+                    {showFreeLimitUpsell ? null : (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Describe your system in plain English. The more detail, the better the output.
+                      </p>
+                    )}
                   </div>
                   <PromptInput
                     ref={promptRef}
                     disabled={generating}
                     generationLimitReached={generationLimitReached}
                     generationLimitUi={limitUx}
+                    userPlan={userPlan}
                     onSubmit={handleGenerate}
                   />
                 </div>
