@@ -62,6 +62,9 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
           <Label htmlFor="desc" className="text-sm font-medium text-foreground/90">
             Describe the system you want to build
           </Label>
+          {generationLimitReached ? (
+            <p className="text-xs text-zinc-500">Upgrade to generate more architectures</p>
+          ) : null}
           <Textarea
             ref={ref}
             id="desc"
