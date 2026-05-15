@@ -12,6 +12,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ctaButtonClass, selectItemHighlightClass } from "@/lib/theme-badges";
+import {
+  DEFAULT_INDUSTRY,
+  DEFAULT_SCALE,
+  DEFAULT_TECH_STACK,
+  INDUSTRY_OPTIONS,
+  SCALE_OPTIONS,
+  TECH_STACK_OPTIONS,
+} from "@/lib/prompt-options";
 import type { PromptPayload } from "./types";
 
 type PromptInputProps = {
@@ -22,21 +31,23 @@ type PromptInputProps = {
 export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProps>(
   function PromptInput({ disabled, onSubmit }, ref) {
     const [description, setDescription] = React.useState("");
-    const [techStack, setTechStack] = React.useState("Any");
-    const [scale, setScale] = React.useState("Startup");
-    const [industry, setIndustry] = React.useState("General");
+    const [techStack, setTechStack] = React.useState<string>(DEFAULT_TECH_STACK);
+    const [scale, setScale] = React.useState<string>(DEFAULT_SCALE);
+    const [industry, setIndustry] = React.useState<string>(DEFAULT_INDUSTRY);
 
     async function submit() {
       await onSubmit({ description, techStack, scale, industry });
     }
 
     const fieldClass =
-      "border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-cyan-500/40";
+      "border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:ring-cyan-500/40";
+
+    const itemClass = selectItemHighlightClass;
 
     return (
       <div className="space-y-6">
         <div className="space-y-3">
-          <Label htmlFor="desc" className="text-sm font-medium text-zinc-200">
+          <Label htmlFor="desc" className="text-sm font-medium text-foreground/90">
             Describe the system you want to build
           </Label>
           <Textarea
@@ -51,49 +62,49 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
             placeholder="E.g. An e-commerce platform where vendors list products, customers buy, we take a fee, and we notify both parties at every step..."
             className={cn("resize-none font-mono text-sm leading-relaxed", fieldClass)}
           />
-          <p className="text-xs text-zinc-500">Minimum 10 characters. Plain language works best.</p>
+          <p className="text-xs text-muted-foreground">Minimum 10 characters. Plain language works best.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <Field label="Scaffold language">
-            <Select value={techStack} onValueChange={(v) => setTechStack(v ?? "Any")} disabled={disabled}>
-              <SelectTrigger className={fieldClass}>
-                <SelectValue placeholder="Pick language" />
+          <Field label="Tech stack">
+            <Select value={techStack} onValueChange={(v) => setTechStack(v ?? DEFAULT_TECH_STACK)} disabled={disabled}>
+              <SelectTrigger className={cn("w-full", fieldClass)}>
+                <SelectValue placeholder="Pick stack" />
               </SelectTrigger>
-              <SelectContent className="border-zinc-800 bg-zinc-900 text-zinc-100">
-                <SelectItem value="Any">Any</SelectItem>
-                <SelectItem value="TypeScript">TypeScript</SelectItem>
-                <SelectItem value="Python">Python</SelectItem>
-                <SelectItem value="Java">Java</SelectItem>
-                <SelectItem value="C#">C#</SelectItem>
-                <SelectItem value="Go">Go</SelectItem>
+              <SelectContent className="border-border bg-card text-foreground shadow-xl shadow-black/40">
+                {TECH_STACK_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option} className={itemClass}>
+                    {option}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>
           <Field label="Expected scale">
-            <Select value={scale} onValueChange={(v) => setScale(v ?? "Startup")} disabled={disabled}>
-              <SelectTrigger className={fieldClass}>
+            <Select value={scale} onValueChange={(v) => setScale(v ?? DEFAULT_SCALE)} disabled={disabled}>
+              <SelectTrigger className={cn("w-full", fieldClass)}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="border-zinc-800 bg-zinc-900 text-zinc-100">
-                <SelectItem value="Startup">Startup</SelectItem>
-                <SelectItem value="Growth">Growth</SelectItem>
-                <SelectItem value="Enterprise">Enterprise</SelectItem>
+              <SelectContent className="border-border bg-card text-foreground shadow-xl shadow-black/40">
+                {SCALE_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option} className={itemClass}>
+                    {option}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>
           <Field label="Industry">
-            <Select value={industry} onValueChange={(v) => setIndustry(v ?? "General")} disabled={disabled}>
-              <SelectTrigger className={fieldClass}>
+            <Select value={industry} onValueChange={(v) => setIndustry(v ?? DEFAULT_INDUSTRY)} disabled={disabled}>
+              <SelectTrigger className={cn("w-full", fieldClass)}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="border-zinc-800 bg-zinc-900 text-zinc-100">
-                <SelectItem value="General">General</SelectItem>
-                <SelectItem value="Fintech">Fintech</SelectItem>
-                <SelectItem value="Healthtech">Healthtech</SelectItem>
-                <SelectItem value="E-commerce">E-commerce</SelectItem>
-                <SelectItem value="SaaS">SaaS</SelectItem>
-                <SelectItem value="Marketplace">Marketplace</SelectItem>
+              <SelectContent className="border-border bg-card text-foreground shadow-xl shadow-black/40">
+                {INDUSTRY_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option} className={itemClass}>
+                    {option}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>
@@ -103,7 +114,10 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
           type="button"
           size="lg"
           disabled={disabled || description.trim().length < 10}
-          className="w-full rounded-lg bg-cyan-500 font-semibold text-black shadow-lg shadow-cyan-500/20 hover:bg-cyan-400 sm:w-auto sm:min-w-[240px]"
+          className={cn(
+            "w-full rounded-lg font-semibold sm:w-auto sm:min-w-[240px]",
+            ctaButtonClass,
+          )}
           onClick={() => void submit()}
         >
           {disabled ? "Generating…" : "Generate Architecture"}
@@ -116,7 +130,7 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <Label className="text-xs font-medium uppercase tracking-wide text-zinc-500">{label}</Label>
+      <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</Label>
       {children}
     </div>
   );

@@ -1,9 +1,10 @@
-﻿import type { Metadata } from "next"
+import type { Metadata } from "next"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Inter, JetBrains_Mono } from "next/font/google"
-import { Toaster } from "sonner"
 import "./globals.css"
 import { cn } from "@/lib/utils"
+import { ThemeProvider } from "@/components/shared/ThemeProvider"
+import { ThemedToaster } from "@/components/shared/ThemedToaster"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,22 +21,24 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Archivolt | Volatility-based architecture planning",
   description:
-    "Design your system around change with Volatility-Based Decomposition — stable interfaces for volatile axes, Mermaid diagrams, and a roadmap you can ship.",
+    "Design your system around change with Volatility-Based Decomposition \u2014 stable interfaces for volatile axes, Mermaid diagrams, and a roadmap you can ship.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn("dark bg-zinc-950", inter.variable)}>
+    <html lang="en" suppressHydrationWarning className={cn(inter.variable, "dark")}>
       <body
         className={cn(
           jetbrainsMono.variable,
-          "font-sans bg-zinc-950 text-zinc-100",
+          "font-sans bg-background text-foreground antialiased",
         )}
       >
-        <ClerkProvider afterSignOutUrl="/">
-          {children}
-          <Toaster richColors theme="dark" position="bottom-right" />
-        </ClerkProvider>
+        <ThemeProvider>
+          <ClerkProvider afterSignOutUrl="/">
+            {children}
+            <ThemedToaster />
+          </ClerkProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

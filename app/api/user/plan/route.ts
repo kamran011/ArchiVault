@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { getServiceRoleClient } from "@/lib/supabase"
 import type { UserPlan } from "@/lib/plan-gate"
+import { resolveSimulatedPlan } from "@/lib/dev-plan-simulate"
 
 export async function GET() {
   const { userId } = await auth()
@@ -23,6 +24,6 @@ export async function GET() {
     return NextResponse.json({ error: "Database error" }, { status: 500 })
   }
 
-  const plan = (data?.plan ?? "free") as UserPlan
-  return NextResponse.json({ plan })
+  const plan = resolveSimulatedPlan((data?.plan ?? "free") as UserPlan)
+  return NextResponse.json({ plan, simulated: plan !== (data?.plan ?? "free") })
 }

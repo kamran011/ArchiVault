@@ -18,20 +18,8 @@
     display: none;
   }
 
-  /** Marketing: near-black base + subtle grid + radial depth */
-  .landing-surface {
-    background-color: #0a0a0a;
-    background-image:
-      radial-gradient(ellipse 90% 55% at 50% -20%, rgb(6 182 212 / 0.12), transparent 55%),
-      radial-gradient(ellipse 50% 40% at 100% 0%, rgb(124 58 237 / 0.08), transparent 45%),
-      linear-gradient(to right, rgb(39 39 42 / 0.5) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(39 39 42 / 0.5) 1px, transparent 1px);
-    background-size:
-      100% 100%,
-      100% 100%,
-      64px 64px,
-      64px 64px;
-    background-position: center top, center, -1px -1px, -1px -1px;
+  .hero-title {
+    letter-spacing: -0.03em;
   }
 }
 
@@ -144,5 +132,32 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+}
+
+.landing-surface {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -20%, rgb(6 182 212 / 0.08), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 0%, rgb(124 58 237 / 0.05), transparent 45%),
+    linear-gradient(to right, rgb(228 228 231 / 0.6) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(228 228 231 / 0.6) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 64px 64px, 64px 64px;
+  background-position: center top, center, -1px -1px, -1px -1px;
+}
+
+.dark .landing-surface {
+  background-color: #0a0a0a;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -20%, rgb(6 182 212 / 0.12), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 0%, rgb(124 58 237 / 0.08), transparent 45%),
+    linear-gradient(to right, rgb(39 39 42 / 0.5) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(39 39 42 / 0.5) 1px, transparent 1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

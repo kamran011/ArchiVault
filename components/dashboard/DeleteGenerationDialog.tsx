@@ -45,7 +45,7 @@ export function DeleteGenerationDialog({
         <DialogPrimitive.Popup
           className={cn(
             "fixed top-1/2 left-1/2 z-50 w-[min(100vw-2rem,420px)] -translate-x-1/2 -translate-y-1/2",
-            "rounded-xl border border-red-500/20 bg-zinc-900 p-6 shadow-2xl shadow-black/50",
+            "rounded-xl border border-red-500/20 bg-card p-6 shadow-2xl shadow-black/50",
             "transition duration-200 data-ending-style:scale-95 data-ending-style:opacity-0",
             "data-starting-style:scale-95 data-starting-style:opacity-0",
           )}
@@ -58,11 +58,11 @@ export function DeleteGenerationDialog({
               <Trash2 className="size-5 text-red-400" />
             </div>
             <div className="min-w-0 flex-1">
-              <DialogPrimitive.Title className="text-lg font-semibold text-white">
+              <DialogPrimitive.Title className="text-lg font-semibold text-foreground">
                 Delete architecture?
               </DialogPrimitive.Title>
-              <DialogPrimitive.Description className="mt-2 text-sm leading-relaxed text-zinc-400">
-                <span className="break-words font-medium text-zinc-200">{systemName}</span> will be
+              <DialogPrimitive.Description className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                <span className="break-words font-medium text-foreground/90">{systemName}</span> will be
                 removed from your history. This cannot be undone.
               </DialogPrimitive.Description>
             </div>
@@ -75,7 +75,7 @@ export function DeleteGenerationDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  className="border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                  className="border-border bg-muted text-foreground/90 hover:bg-accent"
                 />
               }
               disabled={deleting}
@@ -85,7 +85,7 @@ export function DeleteGenerationDialog({
             <Button
               type="button"
               disabled={deleting}
-              className="bg-red-600 font-semibold text-white hover:bg-red-500 disabled:opacity-60"
+              className="bg-red-600 font-semibold text-foreground hover:bg-red-500 disabled:opacity-60"
               onClick={onConfirm}
             >
               {deleting ? "Deleting…" : "Delete"}

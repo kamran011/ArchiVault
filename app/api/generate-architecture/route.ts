@@ -1,13 +1,28 @@
 ﻿import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
-import { architectureSchema } from "@/lib/architecture-schema"
-import { getAnthropicClient } from "@/lib/anthropic"
-import { getGroqClient } from "@/lib/groq"
+import { architectureCoreSchema } from "@/lib/architecture-schema"
+import {
+  createAnthropicTextMessage,
+  streamAnthropicTextMessage,
+  ANTHROPIC_CORE_MAX_OUTPUT_TOKENS,
+  ANTHROPIC_MODEL_FALLBACK_CHAIN,
+  cachedSystemPrompt,
+} from "@/lib/anthropic"
+
+const ARCHITECTURE_PHASE_MODEL = "claude-sonnet-4-6"
+import { rationaleToExplanation, parseLegacyFutureProofExplanation } from "@/lib/future-proof-rationale"
+import { getGroqClient, groqMaxOutputTokens } from "@/lib/groq"
 import { getServiceRoleClient } from "@/lib/supabase"
-import { VBD_SYSTEM_PROMPT } from "@/lib/vbd-prompt"
+import { VBD_SYSTEM_PROMPT_GROQ_CORE, VBD_SYSTEM_PROMPT_CORE } from "@/lib/vbd-prompt"
 import { redactArchitectureForPlan, type UserPlan } from "@/lib/plan-gate"
+import { resolveSimulatedPlan, resolveSimulatedGenerationCount } from "@/lib/dev-plan-simulate"
+import { isGenerationAllowed, generationLimitMessage } from "@/lib/plans"
 import { parseModelJson } from "@/lib/parse-model-json"
+import { sanitizeMermaidDiagram } from "@/lib/sanitize-mermaid"
+import type { Architecture } from "@/types/architecture"
 import { z } from "zod"
+
+const DESCRIPTION_AI_MAX = 3000
 
 const bodySchema = z.object({
   description: z.string().min(10).max(20000),
@@ -15,6 +30,27 @@ const bodySchema = z.object({
   scale: z.string().optional(),
   industry: z.string().optional(),
 })
+
+function encodeSse(payload: Record<string, unknown>): Uint8Array {
+  return new TextEncoder().encode(`data: ${JSON.stringify(payload)}\n\n`)
+}
+
+function buildUserPrompt(
+  description: string,
+  techStack?: string,
+  scale?: string,
+  industry?: string,
+) {
+  return `
+    System Description: ${description}
+    Tech Stack Preference: ${techStack || "Any"}
+    Expected Scale: ${scale || "Startup (0–10k users)"}
+    Industry: ${industry || "General"}
+
+    Apply USER CONTEXT RULES from the system prompt for this tech stack, scale, and industry.
+    Analyze this system using Volatility-Based Decomposition and return the architecture core JSON matching the schema. Do not return anything outside the JSON object.
+  `
+}
 
 export async function POST(req: Request) {
   const { userId } = await auth()
@@ -79,8 +115,11 @@ export async function POST(req: Request) {
     )
   }
 
-  if (user.plan === "free" && user.generation_count >= 1) {
-    return NextResponse.json({ error: "Generation limit reached. Upgrade to Pro." }, { status: 403 })
+  const plan = resolveSimulatedPlan((user.plan ?? "free") as UserPlan)
+  const generationCount = resolveSimulatedGenerationCount(user.generation_count ?? 0)
+
+  if (!isGenerationAllowed(plan, generationCount)) {
+    return NextResponse.json({ error: generationLimitMessage(plan) }, { status: 403 })
   }
 
   let body: unknown
@@ -96,16 +135,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request", details: parsedBody.error.flatten() }, { status: 400 })
   }
 
-  const { description, techStack, scale, industry } = parsedBody.data
-
-  const userPrompt = `
-    System Description: ${description}
-    Tech Stack Preference: ${techStack || "Any"}
-    Expected Scale: ${scale || "Startup"}
-    Industry: ${industry || "General"}
-
-    Analyze this system using Volatility-Based Decomposition and return the architecture as a valid JSON object matching the exact schema specified in the system prompt. Do not return anything outside the JSON object.
-  `
+  const { description: rawDescription, techStack, scale, industry } = parsedBody.data
+  const descriptionForAi = rawDescription.slice(0, DESCRIPTION_AI_MAX)
+  const userPrompt = buildUserPrompt(descriptionForAi, techStack, scale, industry)
 
   const groqKey = process.env.GROQ_API_KEY?.trim()
   const anthropicKey = process.env.ANTHROPIC_API_KEY?.trim()
@@ -117,115 +149,161 @@ export async function POST(req: Request) {
     )
   }
 
-  let rawText: string
-  let finishReason: string | null = null
+  const groqMaxTokens = groqKey
+    ? groqMaxOutputTokens(VBD_SYSTEM_PROMPT_GROQ_CORE, userPrompt)
+    : 12000
+  const anthropicMaxTokens = ANTHROPIC_CORE_MAX_OUTPUT_TOKENS
 
-  const groqMaxTokens = 8000
-  const anthropicMaxTokens = 12000
+  const readable = new ReadableStream({
+    async start(controller) {
+      const enqueue = (payload: Record<string, unknown>) => {
+        controller.enqueue(encodeSse(payload))
+      }
 
-  try {
-    const result = await callArchitectureModel({
-      groqKey,
-      anthropicKey,
-      userPrompt,
-      groqMaxTokens,
-      anthropicMaxTokens,
-    })
-    rawText = result.text
-    finishReason = result.finishReason
-  } catch (e) {
-    console.error(e)
-    const message = formatAiError(e)
-    return NextResponse.json({ error: message }, { status: 502 })
-  }
+      const sendError = (message: string) => {
+        enqueue({ error: message })
+        controller.close()
+      }
 
-  if (finishReason === "length") {
-    return NextResponse.json(
-      { error: "Generation was cut off — try a shorter system description and retry." },
-      { status: 502 },
-    )
-  }
+      try {
+        let rawText: string
+        let finishReason: string | null = null
 
+        if (groqKey) {
+          const result = await callArchitectureModel({
+            groqKey,
+            userPrompt,
+            groqMaxTokens,
+            anthropicMaxTokens,
+          })
+          rawText = result.text
+          finishReason = result.finishReason
+          const chunkSize = 400
+          for (let i = 0; i < rawText.length; i += chunkSize) {
+            enqueue({ chunk: rawText.slice(i, i + chunkSize) })
+          }
+        } else {
+          const result = await streamAnthropicTextMessage({
+            system: cachedSystemPrompt(VBD_SYSTEM_PROMPT_CORE),
+            userPrompt,
+            maxTokens: anthropicMaxTokens,
+            model: ARCHITECTURE_PHASE_MODEL,
+            modelFallbackChain: ANTHROPIC_MODEL_FALLBACK_CHAIN,
+            onTextDelta: (text) => enqueue({ chunk: text }),
+          })
+          rawText = result.text
+          finishReason = result.stopReason === "max_tokens" ? "length" : result.stopReason
+        }
+
+        let architecture: Architecture
+        try {
+          architecture = buildArchitectureFromModelText(rawText, finishReason)
+        } catch (parseErr) {
+          console.error("JSON parse failed, retrying once:", parseErr)
+          try {
+            const retry = await callArchitectureModel({
+              groqKey,
+              userPrompt: `${userPrompt}\n\nYour previous response was not valid JSON. Return ONLY one valid JSON object matching the schema.`,
+              groqMaxTokens,
+              anthropicMaxTokens,
+            })
+            architecture = buildArchitectureFromModelText(retry.text, retry.finishReason)
+          } catch {
+            sendError("The model returned invalid JSON. Please try again.")
+            return
+          }
+        }
+
+        const nextCount = (user.generation_count ?? 0) + 1
+        const timestamp = new Date().toISOString()
+
+        const { error: updErr } = await supabase
+          .from("users")
+          .update({
+            generation_count: nextCount,
+            last_generation_at: timestamp,
+          })
+          .eq("clerk_id", userId)
+
+        if (updErr) {
+          console.error(updErr)
+          sendError("Failed to update usage")
+          return
+        }
+
+        const { data: inserted, error: genErr } = await supabase
+          .from("generations")
+          .insert({
+            clerk_id: userId,
+            description: rawDescription,
+            result: architecture,
+            tech_stack: techStack || "Any",
+          })
+          .select("id")
+          .single()
+
+        if (genErr || !inserted) {
+          console.error(genErr)
+          sendError("Failed to persist generation")
+          return
+        }
+
+        enqueue({
+          done: true,
+          architecture: redactArchitectureForPlan(architecture, plan),
+          generationId: inserted.id,
+        })
+        controller.close()
+      } catch (e) {
+        console.error(e)
+        sendError(formatAiError(e))
+      }
+    },
+  })
+
+  return new Response(readable, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  })
+}
+
+function buildArchitectureFromModelText(rawText: string, finishReason: string | null): Architecture {
   let parsedJson: unknown
 
   try {
     parsedJson = parseModelJson(rawText)
-  } catch (firstErr) {
-    console.error("JSON parse failed, retrying once:", firstErr)
-    try {
-      const retry = await callArchitectureModel({
-        groqKey,
-        anthropicKey,
-        userPrompt: `${userPrompt}\n\nYour previous response was not valid JSON. Return ONLY one valid JSON object matching the schema. Escape newlines in scaffoldPrompt as \\\\n.`,
-        groqMaxTokens,
-        anthropicMaxTokens,
-      })
-      if (retry.finishReason === "length") {
-        return NextResponse.json(
-          { error: "Generation was cut off — try a shorter system description and retry." },
-          { status: 502 },
-        )
-      }
-      parsedJson = parseModelJson(retry.text)
-    } catch (retryErr) {
-      console.error("JSON parse retry failed:", retryErr)
-      return NextResponse.json({ error: "The model returned invalid JSON. Please try again." }, { status: 502 })
+  } catch {
+    if (finishReason === "length") {
+      throw new Error("generation_cut_off")
     }
+    throw new Error("invalid_json")
   }
 
-  const validated = architectureSchema.safeParse(parsedJson)
+  const validated = architectureCoreSchema.safeParse(coerceFutureProofFields(parsedJson))
 
   if (!validated.success) {
-    return NextResponse.json(
-      {
-        error: "Generation failed — please try again.",
-        details: validated.error.flatten(),
-      },
-      { status: 502 },
-    )
+    throw new Error("Generation failed — please try again.")
   }
 
-  const architecture = validated.data
-  const nextCount = (user.generation_count ?? 0) + 1
-  const timestamp = new Date().toISOString()
-
-  const { error: updErr } = await supabase
-    .from("users")
-    .update({
-      generation_count: nextCount,
-      last_generation_at: timestamp,
-    })
-    .eq("clerk_id", userId)
-
-  if (updErr) {
-    console.error(updErr)
-    return NextResponse.json({ error: "Failed to update usage" }, { status: 500 })
+  return {
+    ...validated.data,
+    mermaidDiagram: sanitizeMermaidDiagram(validated.data.mermaidDiagram),
+    futureProofExplanation:
+      validated.data.futureProofExplanation ??
+      rationaleToExplanation(validated.data.futureProofRationale),
   }
-
-  const { error: genErr } = await supabase.from("generations").insert({
-    clerk_id: userId,
-    description,
-    result: architecture,
-    tech_stack: techStack || "Any",
-  })
-
-  if (genErr) {
-    console.error(genErr)
-    return NextResponse.json({ error: "Failed to persist generation" }, { status: 500 })
-  }
-
-  return NextResponse.json(redactArchitectureForPlan(architecture, user.plan as UserPlan))
 }
 
 async function callArchitectureModel({
   groqKey,
-  anthropicKey,
   userPrompt,
   groqMaxTokens,
   anthropicMaxTokens,
 }: {
   groqKey?: string
-  anthropicKey?: string
   userPrompt: string
   groqMaxTokens: number
   anthropicMaxTokens: number
@@ -238,7 +316,7 @@ async function callArchitectureModel({
       max_tokens: groqMaxTokens,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: VBD_SYSTEM_PROMPT },
+        { role: "system", content: VBD_SYSTEM_PROMPT_GROQ_CORE },
         { role: "user", content: userPrompt },
       ],
     })
@@ -252,20 +330,16 @@ async function callArchitectureModel({
     }
   }
 
-  const anthropic = getAnthropicClient()
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: anthropicMaxTokens,
-    system: VBD_SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userPrompt }],
+  const { text, stopReason } = await createAnthropicTextMessage({
+    system: cachedSystemPrompt(VBD_SYSTEM_PROMPT_CORE),
+    userPrompt,
+    maxTokens: anthropicMaxTokens,
+    model: ARCHITECTURE_PHASE_MODEL,
+    modelFallbackChain: ANTHROPIC_MODEL_FALLBACK_CHAIN,
   })
-  const block = response.content[0]
-  if (block.type !== "text") {
-    throw new Error("Unexpected AI response")
-  }
   return {
-    text: block.text,
-    finishReason: response.stop_reason === "max_tokens" ? "length" : response.stop_reason,
+    text,
+    finishReason: stopReason === "max_tokens" ? "length" : stopReason,
   }
 }
 
@@ -283,5 +357,40 @@ function formatAiError(error: unknown): string {
     return "Request too large for the AI provider — try a shorter system description."
   }
 
+  if (raw.includes("not_found_error") || raw.includes('"type":"not_found_error"')) {
+    return `AI model unavailable — tried: ${[ARCHITECTURE_PHASE_MODEL, ...ANTHROPIC_MODEL_FALLBACK_CHAIN].join(", ")}.`
+  }
+
+  if (raw.includes("authentication_error") || raw.includes("invalid x-api-key")) {
+    return "Invalid Anthropic API key — check ANTHROPIC_API_KEY in .env.local."
+  }
+
+  if (raw === "generation_cut_off") {
+    return "Generation was cut off — try a shorter system description and retry."
+  }
+
+  if (raw === "invalid_json" || raw === "validation_failed") {
+    return "The model returned invalid JSON. Please try again."
+  }
+
   return "AI service unavailable. Try again shortly."
+}
+
+function coerceFutureProofFields(data: unknown): unknown {
+  if (!data || typeof data !== "object") return data
+
+  const obj = data as Record<string, unknown>
+  if (obj.futureProofRationale && typeof obj.futureProofRationale === "object") {
+    return data
+  }
+
+  if (typeof obj.futureProofExplanation === "string") {
+    const score = typeof obj.futureProofScore === "number" ? obj.futureProofScore : 70
+    const rationale = parseLegacyFutureProofExplanation(obj.futureProofExplanation, score)
+    if (rationale) {
+      return { ...obj, futureProofRationale: rationale }
+    }
+  }
+
+  return data
 }

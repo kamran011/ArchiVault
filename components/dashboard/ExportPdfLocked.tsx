@@ -9,10 +9,10 @@ export function ExportPdfLocked() {
   return (
     <button
       type="button"
-      onClick={() => toast.message("Upgrade to Pro to export PDF")}
+      onClick={() => toast.message("Upgrade to Blueprint to export PDF")}
       className={cn(
         buttonVariants({ variant: "outline", size: "default" }),
-        "cursor-not-allowed gap-2 border-zinc-800 text-zinc-500 opacity-60 hover:bg-transparent hover:text-zinc-500",
+        "cursor-not-allowed gap-2 border-border text-muted-foreground opacity-60 hover:bg-transparent hover:text-muted-foreground",
       )}
     >
       <Lock className="size-3.5" aria-hidden />

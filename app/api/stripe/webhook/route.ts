@@ -1,6 +1,12 @@
 ﻿import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { getStripe } from "@/lib/stripe"
+import {
+  isSubscriptionActive,
+  planFromSubscriptionMetadata,
+  resolvePlanFromSubscription,
+} from "@/lib/stripe-plans"
+import type { UserPlan } from "@/lib/plan-gate"
 import { getServiceRoleClient } from "@/lib/supabase"
 
 export const runtime = "nodejs"
@@ -24,6 +30,30 @@ async function stripeEvent(request: NextRequest): Promise<{ event?: Stripe.Event
   }
 }
 
+function subscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
+  const legacy = invoice as Stripe.Invoice & {
+    subscription?: string | Stripe.Subscription | null
+  }
+  const subRaw = legacy.subscription
+  if (typeof subRaw === "string") return subRaw
+  if (subRaw && typeof subRaw === "object" && "id" in subRaw) return subRaw.id
+
+  const lineSub = invoice.lines?.data?.[0]?.subscription
+  if (typeof lineSub === "string") return lineSub
+  if (lineSub && typeof lineSub === "object" && "id" in lineSub) return lineSub.id
+  return null
+}
+
+function subscriptionPlanForStatus(sub: Stripe.Subscription): UserPlan {
+  if (isSubscriptionActive(sub.status)) {
+    return resolvePlanFromSubscription(sub) ?? "free"
+  }
+  if (sub.status === "past_due") {
+    return resolvePlanFromSubscription(sub) ?? "free"
+  }
+  return "free"
+}
+
 export async function POST(request: NextRequest) {
   const { event, error } = await stripeEvent(request)
 
@@ -38,38 +68,49 @@ export async function POST(request: NextRequest) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session
       const clerkId = session.metadata?.clerk_id ?? session.client_reference_id ?? ""
-      const plan = session.metadata?.plan as "pro" | "team" | undefined
+      const metaPlan = planFromSubscriptionMetadata(session.metadata)
+      const plan = metaPlan ?? undefined
 
-      const customer = session.customer as string | null | undefined
+      const customerRaw = session.customer
+      const customer =
+        typeof customerRaw === "string"
+          ? customerRaw
+          : customerRaw && typeof customerRaw === "object" && "id" in customerRaw
+            ? String(customerRaw.id)
+            : null
       const subscription = session.subscription as string | null | undefined
+      const isOneTime = session.mode === "payment"
 
-      if (clerkId && plan && customer) {
-        await supabase
+      if (clerkId && plan) {
+        const { error: updateErr } = await supabase
           .from("users")
           .update({
-            stripe_customer_id: customer,
-            stripe_subscription_id: subscription ?? null,
+            ...(customer ? { stripe_customer_id: customer } : {}),
+            stripe_subscription_id: isOneTime ? null : (subscription ?? null),
             plan,
           })
           .eq("clerk_id", clerkId)
+
+        if (updateErr) {
+          console.error("[stripe webhook] checkout.session.completed update failed:", updateErr)
+        }
+      } else {
+        console.warn("[stripe webhook] checkout.session.completed missing metadata", {
+          clerkId: Boolean(clerkId),
+          plan,
+        })
       }
     } else if (event.type === "customer.subscription.updated") {
       const sub = event.data.object as Stripe.Subscription
       const clerkId = sub.metadata?.clerk_id
-      const metaPlan = sub.metadata?.plan as string | undefined
-      const status = sub.status
 
       if (clerkId) {
-        const activePlan =
-          metaPlan &&
-          (status === "active" || status === "trialing" || status === "past_due")
-            ? metaPlan
-            : "free"
+        const activePlan = subscriptionPlanForStatus(sub)
         await supabase
           .from("users")
           .update({
             stripe_subscription_id: sub.id,
-            plan: activePlan ?? "free",
+            plan: activePlan,
           })
           .eq("clerk_id", clerkId)
       }
@@ -83,6 +124,32 @@ export async function POST(request: NextRequest) {
           .update({ plan: "free", stripe_subscription_id: null })
           .eq("clerk_id", clerkId)
       }
+    } else if (event.type === "invoice.payment_failed") {
+      const invoice = event.data.object as Stripe.Invoice
+      const subId = subscriptionIdFromInvoice(invoice)
+      if (!subId) {
+        return NextResponse.json({ received: true })
+      }
+
+      const stripe = getStripe()
+      const sub = await stripe.subscriptions.retrieve(subId)
+      const clerkId = sub.metadata?.clerk_id
+      if (!clerkId) {
+        return NextResponse.json({ received: true })
+      }
+
+      const plan =
+        sub.status === "unpaid" || sub.status === "canceled"
+          ? "free"
+          : subscriptionPlanForStatus(sub)
+
+      await supabase
+        .from("users")
+        .update({
+          stripe_subscription_id: sub.status === "canceled" ? null : sub.id,
+          plan,
+        })
+        .eq("clerk_id", clerkId)
     }
 
     return NextResponse.json({ received: true })

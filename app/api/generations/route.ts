@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server"
 import { getServiceRoleClient } from "@/lib/supabase"
 import { redactArchitectureForPlan, type UserPlan } from "@/lib/plan-gate"
+import { resolveSimulatedPlan } from "@/lib/dev-plan-simulate"
 import type { Architecture } from "@/types/architecture"
 
 export async function GET() {
@@ -24,7 +25,7 @@ export async function GET() {
     return NextResponse.json({ error: "Database error" }, { status: 500 })
   }
 
-  const plan = (userRow?.plan ?? "free") as UserPlan
+  const plan = resolveSimulatedPlan((userRow?.plan ?? "free") as UserPlan)
 
   const { data, error } = await supabase
     .from("generations")

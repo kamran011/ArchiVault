@@ -83,7 +83,7 @@ export function ExportButton({ architecture }: Props) {
       type="button"
       variant="outline"
       disabled={busy}
-      className="border-zinc-700 text-zinc-200 hover:bg-zinc-800 hover:text-white"
+      className="border-border text-foreground/90 hover:bg-accent hover:text-foreground"
       onClick={() => void handleClick()}
     >
       {busy ? "Generating PDF…" : "Export PDF"}

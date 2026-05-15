@@ -7,7 +7,7 @@ const DashboardApp = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-dvh items-center justify-center bg-zinc-950 text-sm text-zinc-400">
+      <div className="flex h-dvh items-center justify-center bg-background text-sm text-muted-foreground">
         Loading studio…
       </div>
     ),

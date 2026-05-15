@@ -62,7 +62,7 @@ export function ScaffoldPromptUpgrade() {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "pro" }),
+        body: JSON.stringify({ plan: "blueprint" }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Checkout failed");
@@ -75,22 +75,22 @@ export function ScaffoldPromptUpgrade() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
       <div className="relative p-6">
         <pre
-          className="max-h-80 overflow-hidden whitespace-pre-wrap font-mono text-xs leading-relaxed text-zinc-300 blur-sm select-none pointer-events-none opacity-50"
+          className="max-h-80 overflow-hidden whitespace-pre-wrap font-mono text-xs leading-relaxed text-foreground/80 blur-sm select-none pointer-events-none opacity-50"
           aria-hidden
         >
           {EXAMPLE_SCAFFOLD}
         </pre>
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-zinc-950/60 px-6 text-center backdrop-blur-[2px]">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background/60 px-6 text-center backdrop-blur-[2px]">
           <div className="flex size-12 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10">
             <Lock className="size-5 text-cyan-400" aria-hidden />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">Scaffold prompt locked</h3>
-            <p className="mt-2 max-w-md text-sm text-zinc-400">
-              Upgrade to Pro to get a ready-to-paste prompt for AI-native coding agents that scaffolds your entire
+            <h3 className="text-lg font-semibold text-foreground">Scaffold prompt locked</h3>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              Get Blueprint or Pro to unlock a ready-to-paste prompt for AI coding agents that scaffolds your
               project from this architecture.
             </p>
           </div>
@@ -100,7 +100,7 @@ export function ScaffoldPromptUpgrade() {
             className="bg-cyan-500 font-semibold text-black hover:bg-cyan-400"
             onClick={() => void startCheckout()}
           >
-            {loading ? "Redirecting…" : "Upgrade to Pro to unlock"}
+            {loading ? "Redirecting…" : "Unlock scaffold prompt"}
           </Button>
           {error ? <p className="text-sm text-red-400">{error}</p> : null}
         </div>

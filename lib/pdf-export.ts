@@ -1,4 +1,6 @@
 import type { Architecture } from "@/types/architecture";
+import { resolveFutureProofRationale } from "@/lib/future-proof-rationale";
+import { stripLeadingListMarker } from "@/lib/utils";
 
 function escapeHtml(value: string): string {
   return value
@@ -10,6 +12,45 @@ function escapeHtml(value: string): string {
 
 function normalizeDiagram(diagram: string): string {
   return diagram.replace(/\\n/g, "\n").replace(/\\t/g, "  ").trim();
+}
+
+function buildFutureProofScoreHtml(architecture: Architecture): string {
+  const rationale = resolveFutureProofRationale(architecture);
+  if (!rationale) {
+    const text =
+      architecture.futureProofExplanation ??
+      `Score ${architecture.futureProofScore}/100`;
+    return `<div class="score-text">${escapeHtml(text)}</div>`;
+  }
+
+  const axesHtml =
+    rationale.axesCovered.length > 0
+      ? `<p class="score-sub">Axes covered</p><p>${rationale.axesCovered
+          .map((axis) => `<span class="score-tag">${escapeHtml(axis)}</span>`)
+          .join("")}</p>`
+      : "";
+
+  const deductionsHtml =
+    rationale.deductions.length > 0
+      ? `<p class="score-sub">Deductions</p>${rationale.deductions
+          .map(
+            (d) =>
+              `<p class="score-deduction"><strong>−${d.points} pts</strong> ${escapeHtml(d.reason)}</p>`,
+          )
+          .join("")}`
+      : "";
+
+  const scenariosHtml =
+    rationale.scenarios.length > 0
+      ? `<p class="score-sub">Future scenarios</p>${rationale.scenarios
+          .map(
+            (s) =>
+              `<p class="score-scenario"><strong>${escapeHtml(s.title)}</strong><br/><strong>Trigger:</strong> ${escapeHtml(s.trigger)}<br/><strong>Changes:</strong> ${escapeHtml(s.whatChanges)}<br/><strong>Stays stable:</strong> ${escapeHtml(s.whatStaysStable)}</p>`,
+          )
+          .join("")}`
+      : "";
+
+  return `<p class="score-headline">${escapeHtml(rationale.headline)}</p>${axesHtml}${deductionsHtml}${scenariosHtml}`;
 }
 
 export async function renderMermaidImageDataUrl(diagram: string): Promise<string | null> {
@@ -99,6 +140,39 @@ const PDF_STYLES = `
     margin-bottom: 4px;
   }
   .score-text { font-size: 13px; color: #3f3f46; line-height: 1.5; }
+  .score-headline { font-size: 13px; color: #3f3f46; line-height: 1.5; margin-bottom: 10px; }
+  .score-sub { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #71717a; margin: 10px 0 6px; }
+  .score-tag {
+    display: inline-block;
+    background: #f4f4f5;
+    border: 1px solid #e4e4e7;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 10px;
+    color: #18181b;
+    margin: 0 4px 4px 0;
+  }
+  .score-deduction {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #3f3f46;
+  }
+  .score-scenario {
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #3f3f46;
+    line-height: 1.45;
+  }
+  .score-scenario strong { color: #18181b; }
   .summary-card {
     background: #fafafa;
     border: 1px solid #e4e4e7;
@@ -307,7 +381,7 @@ export async function buildPdfDocumentElement(architecture: Architecture): Promi
       (item, i) => `
       <div class="order-item">
         <div class="order-num">${i + 1}</div>
-        <div>${escapeHtml(item)}</div>
+        <div>${escapeHtml(stripLeadingListMarker(item))}</div>
       </div>`,
     )
     .join("");
@@ -329,7 +403,7 @@ export async function buildPdfDocumentElement(architecture: Architecture): Promi
     <style>${PDF_STYLES}</style>
     <div class="pdf-root">
       <div class="header">
-        <div class="brand">⚡ Archivolt</div>
+        <div class="brand">Archivolt</div>
         <div class="date">Generated ${escapeHtml(generatedDate)}</div>
       </div>
       <div class="title">${escapeHtml(architecture.systemName)}</div>
@@ -338,7 +412,7 @@ export async function buildPdfDocumentElement(architecture: Architecture): Promi
         <div class="score-number">${score}</div>
         <div>
           <div class="score-label">Future-Proof Score</div>
-          <div class="score-text">${escapeHtml(architecture.futureProofExplanation)}</div>
+          ${buildFutureProofScoreHtml(architecture)}
         </div>
       </div>
       <div class="section-title">Executive Summary</div>
@@ -353,7 +427,7 @@ export async function buildPdfDocumentElement(architecture: Architecture): Promi
       <div class="section-title section-gap">Technical Recommendations</div>
       ${recsHtml}
       <div class="footer">
-        <span>⚡ Archivolt · archivolt.dev</span>
+        <span>Archivolt · archivolt.dev</span>
         <span>Volatility-Based Decomposition Architecture</span>
       </div>
     </div>
