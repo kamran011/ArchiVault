@@ -46,13 +46,13 @@ export default function PrivacyPage() {
         <h2 className="text-base font-semibold text-foreground">GDPR</h2>
         <p>
           If you are in the EEA/UK, we aim to process personal data lawfully and to honor requests for access, correction,
-          deletion, or portability where applicable. Contact <a href="mailto:legal@archivolt.dev" className="text-cyan-500 hover:underline">legal@archivolt.dev</a> to exercise your rights.
+          deletion, or portability where applicable. Contact <a href="mailto:support@archivolt.dev" className="text-cyan-500 hover:underline">support@archivolt.dev</a> to exercise your rights.
         </p>
       </section>
 
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">Contact</h2>
-        <p>Questions about this policy: legal@archivolt.dev.</p>
+        <p>Questions about this policy: support@archivolt.dev.</p>
       </section>
     </LegalPageLayout>
   )

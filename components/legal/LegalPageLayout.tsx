@@ -23,8 +23,8 @@ export function LegalPageLayout({
         <div className="mt-10 space-y-6 text-sm leading-relaxed text-foreground/85">{children}</div>
         <p className="mt-12 border-t border-border pt-8 text-xs text-muted-foreground">
           Questions? Contact{" "}
-          <a href="mailto:legal@archivolt.dev" className="text-cyan-500 hover:underline">
-            legal@archivolt.dev
+          <a href="mailto:support@archivolt.dev" className="text-cyan-500 hover:underline">
+            support@archivolt.dev
           </a>
           . This page is general information, not legal advice.
         </p>

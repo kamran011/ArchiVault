@@ -57,7 +57,7 @@ service, then recommend the most appropriate system design patterns.
 35. API Gateway: Single entry point for all services. ALWAYS use in microservices.
 36. Backend for Frontend (BFF): Separate API layers per client type. Use for mobile + web.
 37. Rate Limiting: Restrict requests per time window. ALWAYS use on public APIs.
-38. Cursor Pagination: Paginate with opaque cursor. Use for any list endpoint.
+38. Keyset Pagination: Paginate with opaque cursor. Use for any list endpoint.
 39. API Versioning: Maintain multiple API versions. Use for public APIs.
 
 ### INFRASTRUCTURE (40-43)

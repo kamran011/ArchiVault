@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
+import { PricingCtaLink } from "@/components/shared/PricingCtaLink";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -175,9 +175,9 @@ export function DashboardSidebar({
               {upgrading ? "…" : "Upgrade"}
             </button>
           ) : (
-            <Link href="/#pricing" className={upgradeButtonClass}>
+            <PricingCtaLink href="/#pricing" className={upgradeButtonClass}>
               Plans
-            </Link>
+            </PricingCtaLink>
           )}
           </div>
         </div>

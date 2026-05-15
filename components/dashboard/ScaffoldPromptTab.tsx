@@ -71,8 +71,8 @@ export function ScaffoldPromptTab({
         </div>
         <h3 className="mb-2 text-lg font-semibold text-foreground">Generate Scaffold Prompt</h3>
         <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-          Build a ready-to-paste Cursor or Claude Code prompt from your architecture — no extra AI
-          call. Generate tech stack first for richer library recommendations.
+          Build a ready-to-paste prompt for leading AI coding agents from your architecture — no extra
+          AI call. Generate tech stack first for richer library recommendations.
         </p>
         {error ? <p className="mb-4 text-sm text-red-400">{error}</p> : null}
         <button
@@ -94,7 +94,7 @@ export function ScaffoldPromptTab({
         <div>
           <h3 className="text-base font-semibold text-foreground">Scaffold prompt</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Paste this into Cursor Agent or Claude Code to scaffold your project.
+            Paste this into an AI coding agent to scaffold your project.
           </p>
         </div>
         <div className="flex items-center gap-2">

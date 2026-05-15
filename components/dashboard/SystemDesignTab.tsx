@@ -19,6 +19,7 @@ import {
   sdRiskCalloutTitleClass,
 } from "@/lib/theme-badges"
 import { cn } from "@/lib/utils"
+import { PricingCtaLink } from "@/components/shared/PricingCtaLink"
 import {
   Loader2,
   AlertTriangle,
@@ -124,15 +125,12 @@ export function SystemDesignTab({
             </div>
           </div>
           <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-background via-background/80 to-transparent pb-6">
-            <button
-              type="button"
-              onClick={() => {
-                window.location.href = "/#pricing"
-              }}
+            <PricingCtaLink
+              href="/#pricing"
               className="rounded-xl bg-cyan-500 px-6 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-cyan-400"
             >
               Upgrade to Team — $79/mo
-            </button>
+            </PricingCtaLink>
           </div>
         </div>
       </div>

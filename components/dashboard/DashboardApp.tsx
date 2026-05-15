@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { PromptInput } from "./PromptInput";
 import type { PromptPayload } from "./types";
 import type { UserPlan } from "@/lib/plan-gate";
+import { generationLimitUi, isGenerationLimitReached } from "@/lib/plans";
 import { ArchivoltLogo } from "@/components/brand/ArchivoltLogo";
 import { BrandWordmark } from "@/components/brand/BrandWordmark";
 import { DeleteGenerationDialog } from "./DeleteGenerationDialog";
@@ -30,6 +31,7 @@ export function DashboardApp() {
   const [streamingText, setStreamingText] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [userPlan, setUserPlan] = React.useState<UserPlan>("free");
+  const [generationCount, setGenerationCount] = React.useState(0);
   const [techStack, setTechStack] = React.useState("Any");
   const [pendingDelete, setPendingDelete] = React.useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = React.useState(false);
@@ -40,8 +42,13 @@ export function DashboardApp() {
     try {
       const res = await fetch("/api/user/plan");
       const body = await res.json();
-      if (res.ok && body?.plan) {
-        setUserPlan(body.plan as UserPlan);
+      if (res.ok) {
+        if (body?.plan) {
+          setUserPlan(body.plan as UserPlan);
+        }
+        if (typeof body?.generationCount === "number") {
+          setGenerationCount(body.generationCount);
+        }
       }
     } catch {
       // keep default free
@@ -114,6 +121,7 @@ export function DashboardApp() {
         const body = (await res.json()) as Architecture;
         setArchitecture(body);
         const mapped = await loadGenerations();
+        void loadPlan();
         const newest = mapped[0];
         if (newest) setActiveGenId(newest.id);
         return;
@@ -165,6 +173,7 @@ export function DashboardApp() {
               setActiveGenId(data.generationId);
             }
             await loadGenerations();
+            void loadPlan();
           }
         }
       }
@@ -250,6 +259,9 @@ export function DashboardApp() {
 
   const studioColumnClass = "mx-auto w-full max-w-6xl px-6";
 
+  const generationLimitReached = isGenerationLimitReached(userPlan, generationCount);
+  const limitUx = generationLimitReached ? generationLimitUi(userPlan) : null;
+
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-background">
       <DeleteGenerationDialog
@@ -308,9 +320,11 @@ export function DashboardApp() {
                 <div className="pl-6">
                   <BrandWordmark logoSize={22} textClassName="text-base" className="mb-2" />
                   <h1 className="text-2xl font-bold tracking-tight text-foreground">Architecture studio</h1>
-                  <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                    Describe volatility, freeze core workflows, and ship adapter-friendly boundaries.
-                  </p>
+                    <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                      {generationLimitReached
+                        ? "You've reached your plan's generation limit. Upgrade to keep building architectures."
+                        : "Describe volatility, freeze core workflows, and ship adapter-friendly boundaries."}
+                    </p>
                 </div>
                 <BadgePill />
               </div>
@@ -326,12 +340,18 @@ export function DashboardApp() {
                   <div className="mb-6">
                     <h2 className="text-lg font-semibold text-foreground">System brief</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {userPlan === "free" && generations.length >= 1
-                        ? "You've used your free blueprint. Upgrade to Pro for unlimited."
+                      {generationLimitReached
+                        ? "You've reached your plan's generation limit. See below to upgrade and generate more."
                         : "Describe your system in plain English. The more detail, the better the output."}
                     </p>
                   </div>
-                  <PromptInput ref={promptRef} disabled={generating} onSubmit={handleGenerate} />
+                  <PromptInput
+                    ref={promptRef}
+                    disabled={generating}
+                    generationLimitReached={generationLimitReached}
+                    generationLimitUi={limitUx}
+                    onSubmit={handleGenerate}
+                  />
                 </div>
               ) : null}
 

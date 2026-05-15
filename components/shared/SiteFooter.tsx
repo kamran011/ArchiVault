@@ -19,7 +19,7 @@ export function SiteFooter() {
           <Link href="/refund" className="hover:text-foreground">
             Refunds
           </Link>
-          <a href="mailto:legal@archivolt.dev" className="hover:text-foreground">
+          <a href="mailto:support@archivolt.dev" className="hover:text-foreground">
             Contact
           </a>
         </div>

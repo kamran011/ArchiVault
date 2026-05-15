@@ -190,7 +190,7 @@ Given a system description, you must:
    - E-commerce / Marketplace → Stripe, Redis cache, search (Algolia)
 
 7. SCAFFOLD PROMPT
-   Produce a complete ready-to-paste prompt for AI coding assistants (Cursor, Claude Code, GitHub Copilot) in the scaffoldPrompt field.
+   Produce a complete ready-to-paste prompt for leading AI coding agents in the scaffoldPrompt field.
 
    scaffoldPrompt MUST use exactly these four markdown sections in order — no other sections:
 
@@ -336,7 +336,7 @@ Return ONLY a valid JSON object with this exact schema. No preamble, no explanat
     "packageJson": "string — JSON object string of production dependencies",
     "devDependencies": "string — JSON object string of dev dependencies"
   },
-  "scaffoldPrompt": "string — ready-to-paste Cursor/Claude Code prompt using exactly ## ROLE, ## OBJECTIVE, ## CONTEXT, ## DATA sections; use techStackAnalysis.axisRecommendations libraries in adapters; match selectedStack framework"
+  "scaffoldPrompt": "string — ready-to-paste prompt for AI coding agents using exactly ## ROLE, ## OBJECTIVE, ## CONTEXT, ## DATA sections; use techStackAnalysis.axisRecommendations libraries in adapters; match selectedStack framework"
 }
 `;
 
@@ -379,7 +379,7 @@ export const VBD_SYSTEM_PROMPT_CORE =
   VBD_CORE_OUTPUT_FORMAT;
 
 const SCAFFOLD_SECTION_COMPACT = `7. SCAFFOLD PROMPT
-   Return scaffoldPrompt as "." only — the server rebuilds the full Cursor/Claude Code prompt from your JSON.
+   Return scaffoldPrompt as "." only — the server rebuilds the full scaffold prompt for AI coding agents from your JSON.
    Spend output tokens on complete volatilityAxes (7-10 for rich domains), coreServices, and techStackAnalysis.`;
 
 const vbdOutputFormatStart = VBD_SYSTEM_PROMPT.indexOf("## OUTPUT FORMAT");
@@ -390,7 +390,7 @@ export const VBD_SYSTEM_PROMPT_ANTHROPIC =
   SCAFFOLD_SECTION_COMPACT +
   "\n\n" +
   VBD_SYSTEM_PROMPT.slice(vbdOutputFormatStart).replace(
-    '"scaffoldPrompt": "string — ready-to-paste Cursor/Claude Code prompt using exactly ## ROLE, ## OBJECTIVE, ## CONTEXT, ## DATA sections; use techStackAnalysis.axisRecommendations libraries in adapters; match selectedStack framework"',
+    '"scaffoldPrompt": "string — ready-to-paste prompt for AI coding agents using exactly ## ROLE, ## OBJECTIVE, ## CONTEXT, ## DATA sections; use techStackAnalysis.axisRecommendations libraries in adapters; match selectedStack framework"',
     '"scaffoldPrompt": "."',
   );
 

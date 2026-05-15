@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { getServiceRoleClient } from "@/lib/supabase"
 import type { UserPlan } from "@/lib/plan-gate"
-import { resolveSimulatedPlan } from "@/lib/dev-plan-simulate"
+import { resolveSimulatedPlan, resolveSimulatedGenerationCount } from "@/lib/dev-plan-simulate"
 
 export async function GET() {
   const { userId } = await auth()
@@ -15,7 +15,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("users")
-    .select("plan")
+    .select("plan, generation_count")
     .eq("clerk_id", userId)
     .maybeSingle()
 
@@ -25,5 +25,12 @@ export async function GET() {
   }
 
   const plan = resolveSimulatedPlan((data?.plan ?? "free") as UserPlan)
-  return NextResponse.json({ plan, simulated: plan !== (data?.plan ?? "free") })
+  const rawCount = data?.generation_count ?? 0
+  const generationCount = resolveSimulatedGenerationCount(typeof rawCount === "number" ? rawCount : 0)
+
+  return NextResponse.json({
+    plan,
+    generationCount,
+    simulatedPlan: plan !== (data?.plan ?? "free"),
+  })
 }

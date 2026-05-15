@@ -14,8 +14,8 @@ export default function RefundPage() {
         <p>
           For paid <strong>Blueprint</strong> (one-time), <strong>Pro</strong>, and <strong>Team</strong> purchases, you
           may request a full refund within <strong>30 days</strong> of the charge if you are not satisfied. Contact us at{" "}
-          <a href="mailto:legal@archivolt.dev" className="text-cyan-500 hover:underline">
-            legal@archivolt.dev
+          <a href="mailto:support@archivolt.dev" className="text-cyan-500 hover:underline">
+            support@archivolt.dev
           </a>{" "}
           with your account email and approximate purchase date. We will confirm eligibility and process approved refunds
           to the original payment method where possible.

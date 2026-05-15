@@ -41,7 +41,7 @@ export const PRICING_TIERS: PricingTier[] = [
     features: [
       "4 total generations (includes your free one)",
       "PDF export + saved history",
-      "Full scaffold prompt for Cursor / Claude Code",
+      "Full scaffold prompt for leading AI coding agents",
     ],
     checkoutPlan: "blueprint",
     cta: "Buy Blueprint",
@@ -94,6 +94,49 @@ export function isGenerationAllowed(plan: UserPlan, generationCount: number): bo
   const limit = generationLimitForPlan(plan)
   if (limit === null) return true
   return generationCount < limit
+}
+
+/** True when lifetime generation_count has reached this plan cap (requires server-side counter). */
+export function isGenerationLimitReached(plan: UserPlan, generationCount: number): boolean {
+  return !isGenerationAllowed(plan, generationCount)
+}
+
+export type GenerationLimitUi = {
+  summary: string
+  detail: string
+  ctaLabel: string
+  ctaHref: string
+}
+
+/** Copy shown when limit is reached; only call when limit reached so Pro/Team return null-safe defaults. */
+export function generationLimitUi(plan: UserPlan): GenerationLimitUi {
+  const pricingHref = "/#pricing"
+
+  switch (plan) {
+    case "free":
+      return {
+        summary: "1/1 free generation used. Upgrade to continue.",
+        detail:
+          "You've used your 1 free generation. Upgrade to Blueprint ($49) for 4 more, or Pro ($29/mo) for unlimited.",
+        ctaLabel: "Upgrade now",
+        ctaHref: pricingHref,
+      }
+    case "blueprint":
+      return {
+        summary: "4/4 generations used.",
+        detail:
+          "You've used all four Blueprint-pack generations. Buy more Blueprint or upgrade to Pro for unlimited architectures.",
+        ctaLabel: "View plans",
+        ctaHref: pricingHref,
+      }
+    default:
+      return {
+        summary: "Generation limit reached.",
+        detail: "Please upgrade your plan to continue.",
+        ctaLabel: "View plans",
+        ctaHref: pricingHref,
+      }
+  }
 }
 
 export function generationLimitMessage(plan: UserPlan): string {

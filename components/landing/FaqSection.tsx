@@ -15,7 +15,7 @@ const FAQS = [
   },
   {
     q: "Is the generated architecture actually usable in production?",
-    a: "Yes. The output includes typed interface names (IPaymentProcessor, INotificationSender), concrete adapter recommendations for today, alternative adapters for the future, a dependency injection wiring guide, and a scaffold prompt you can paste directly into Cursor or Claude Code to generate the actual project structure.",
+    a: "Yes. The output includes typed interface names (IPaymentProcessor, INotificationSender), concrete adapter recommendations for today, alternative adapters for the future, a dependency injection wiring guide, and a scaffold prompt you can paste into leading AI coding agents to generate the actual project structure.",
   },
   {
     q: "What's the difference between Blueprint and Pro?",

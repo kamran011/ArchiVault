@@ -6,11 +6,13 @@ import { BrandWordmark } from "@/components/brand/BrandWordmark"
 import { ExampleOutputSection } from "@/components/landing/ExampleOutputSection"
 import { FaqSection } from "@/components/landing/FaqSection"
 import { PricingSection } from "@/components/landing/PricingSection"
+import { ScrollPricingIntoViewOnMount } from "@/components/shared/PricingCtaLink"
 import { SiteFooter } from "@/components/shared/SiteFooter"
 
 export default function Home() {
   return (
     <div className="landing-surface min-h-screen text-foreground">
+      <ScrollPricingIntoViewOnMount />
       {/* NAVBAR */}
       <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
