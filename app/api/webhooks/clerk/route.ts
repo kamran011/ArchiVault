@@ -3,9 +3,9 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getServiceRoleClient } from "@/lib/supabase"
 
 /**
- * Syncs Clerk users into Supabase (pattern from Clerk Backend SDK / webhooks).
- * Configure in Clerk Dashboard → Webhooks → endpoint POST .../api/webhooks/clerk
- * and set CLERK_WEBHOOK_SIGNING_SECRET in the environment.
+ * Legacy path — production uses POST /api/clerk/webhook (log-only for now).
+ * This route still syncs Clerk users into Supabase if you point a webhook here.
+ * Set CLERK_WEBHOOK_SIGNING_SECRET in the environment.
  */
 export async function POST(req: NextRequest) {
   let evt: Awaited<ReturnType<typeof verifyWebhook>>
