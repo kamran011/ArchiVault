@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sanitizeMermaidDiagram } from "@/lib/sanitize-mermaid";
-import { toPng } from "html-to-image";
+import { toBlob } from "html-to-image";
 
 type MermaidApi = {
   initialize: (config: Record<string, unknown>) => void | Promise<void>;
@@ -56,21 +56,33 @@ function fileSlug(systemName?: string): string {
   return base || "architecture";
 }
 
+function parseViewBoxSize(viewBox: string): { width: number; height: number } | null {
+  const parts = viewBox.trim().split(/[\s,]+/).map(Number);
+  if (parts.length === 4 && parts.every((n) => Number.isFinite(n))) {
+    const w = parts[2];
+    const h = parts[3];
+    if (w > 0 && h > 0) return { width: w, height: h };
+  }
+  return null;
+}
+
 function getSvgDimensions(svg: SVGSVGElement): { width: number; height: number } {
   const viewBox = svg.getAttribute("viewBox");
   if (viewBox) {
-    const parts = viewBox.split(/\s+/).map(Number);
-    if (parts.length === 4 && parts.every((n) => Number.isFinite(n))) {
-      return { width: parts[2], height: parts[3] };
-    }
+    const parsed = parseViewBoxSize(viewBox);
+    if (parsed) return parsed;
   }
   const width = Number.parseFloat(svg.getAttribute("width") || "");
   const height = Number.parseFloat(svg.getAttribute("height") || "");
   if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
     return { width, height };
   }
-  const box = svg.getBBox();
-  return { width: Math.max(box.width, 1), height: Math.max(box.height, 1) };
+  try {
+    const box = svg.getBBox();
+    return { width: Math.max(box.width, 1), height: Math.max(box.height, 1) };
+  } catch {
+    return { width: 800, height: 480 };
+  }
 }
 
 function applyScaleToSvg(svg: SVGSVGElement, natural: { width: number; height: number }, scale: number) {
@@ -122,10 +134,14 @@ function cloneSvgForExport(svg: SVGSVGElement): SVGSVGElement {
   return svg.cloneNode(true) as SVGSVGElement;
 }
 
-function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; width: number; height: number } {
+/** Mutate a disconnected clone for light-themed export. */
+function applyLightExportThemeMutate(clonedSvg: SVGSVGElement): { width: number; height: number } {
   const { width, height } = getSvgDimensions(clonedSvg);
-  clonedSvg.setAttribute("width", String(width));
-  clonedSvg.setAttribute("height", String(height));
+  const w = Math.max(1, Math.ceil(width));
+  const h = Math.max(1, Math.ceil(height));
+
+  clonedSvg.setAttribute("width", String(w));
+  clonedSvg.setAttribute("height", String(h));
   clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   clonedSvg.style.background = "#ffffff";
   clonedSvg.style.color = "#1a1a1a";
@@ -133,8 +149,8 @@ function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; wid
   const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   bg.setAttribute("x", "0");
   bg.setAttribute("y", "0");
-  bg.setAttribute("width", String(width));
-  bg.setAttribute("height", String(height));
+  bg.setAttribute("width", String(w));
+  bg.setAttribute("height", String(h));
   bg.setAttribute("fill", "#ffffff");
   clonedSvg.insertBefore(bg, clonedSvg.firstChild);
 
@@ -182,8 +198,12 @@ function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; wid
     node.setAttribute("fill", "#1a1a1a");
   });
 
-  const svgData = new XMLSerializer().serializeToString(clonedSvg);
+  return { width: w, height: h };
+}
 
+function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; width: number; height: number } {
+  const { width, height } = applyLightExportThemeMutate(clonedSvg);
+  const svgData = new XMLSerializer().serializeToString(clonedSvg);
   return { svgData, width, height };
 }
 
@@ -192,17 +212,22 @@ function prepareLightExportSvg(svg: SVGSVGElement): { svgData: string; width: nu
 }
 
 /**
- * Rasterize via html-to-image (avoids Canvas drawImage+taint issues with SVG foreignObject while keeping labels).
+ * Rasterize via html-to-image. Target must be laid out in-document (not far off-screen); otherwise capture is often blank.
  */
 async function lightExportSvgToPngBlob(svg: SVGSVGElement): Promise<Blob | null> {
-  const { svgData, width, height } = prepareLightExportSvg(svg);
-  if (!width || !height || !svgData.trim()) return null;
+  const clone = cloneSvgForExport(svg);
+  const { width, height } = applyLightExportThemeMutate(clone);
+
+  clone.style.display = "block";
+  clone.style.maxWidth = "none";
+  clone.style.width = `${width}px`;
+  clone.style.height = `${height}px`;
 
   const host = document.createElement("div");
   host.setAttribute("aria-hidden", "true");
   host.style.boxSizing = "border-box";
   host.style.position = "fixed";
-  host.style.left = "-99999px";
+  host.style.left = "0";
   host.style.top = "0";
   host.style.margin = "0";
   host.style.padding = "0";
@@ -210,32 +235,29 @@ async function lightExportSvgToPngBlob(svg: SVGSVGElement): Promise<Blob | null>
   host.style.height = `${height}px`;
   host.style.overflow = "hidden";
   host.style.backgroundColor = "#ffffff";
-  host.innerHTML = svgData;
-
-  const svgEl = host.querySelector("svg");
-  if (!svgEl) {
-    return null;
-  }
-
-  svgEl.setAttribute("width", String(width));
-  svgEl.setAttribute("height", String(height));
-  svgEl.style.width = `${width}px`;
-  svgEl.style.height = `${height}px`;
-  svgEl.style.maxWidth = "none";
-  svgEl.style.display = "block";
+  host.style.opacity = "1";
+  host.style.visibility = "visible";
+  host.style.pointerEvents = "none";
+  /** Off-viewport but still painted; far negative positions break layout rasterization (blank PNG). */
+  host.style.transform = "translate(-300vw, -300vh)";
+  host.appendChild(clone);
 
   document.body.appendChild(host);
 
   try {
-    const dataUrl = await toPng(host, {
+    if (typeof document.fonts?.ready !== "undefined") {
+      await document.fonts.ready.catch(() => {});
+    }
+    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+
+    const blob = await toBlob(host, {
       backgroundColor: "#ffffff",
       pixelRatio: 2,
       cacheBust: true,
       width,
       height,
     });
-    const res = await fetch(dataUrl);
-    return await res.blob();
+    return blob;
   } catch {
     return null;
   } finally {
