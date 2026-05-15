@@ -38,6 +38,9 @@ export function LegalPageLayout({
           <Link href="/terms" className="text-muted-foreground hover:text-foreground">
             Terms
           </Link>
+          <Link href="/refund" className="text-muted-foreground hover:text-foreground">
+            Refunds
+          </Link>
         </p>
       </main>
     </div>

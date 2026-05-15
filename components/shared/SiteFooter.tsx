@@ -16,6 +16,9 @@ export function SiteFooter() {
           <Link href="/terms" className="hover:text-foreground">
             Terms
           </Link>
+          <Link href="/refund" className="hover:text-foreground">
+            Refunds
+          </Link>
           <a href="mailto:legal@archivolt.dev" className="hover:text-foreground">
             Contact
           </a>
