@@ -336,24 +336,35 @@ export function DashboardApp() {
           <div className="min-h-0 flex-1 overflow-y-auto py-6">
             <div className={cn(studioColumnClass, "space-y-8")}>
               {isCreateMode ? (
-                <div className="rounded-xl border border-border bg-card p-6 shadow-lg shadow-black/20">
-                  <div className={cn("mb-6", showFreeLimitUpsell && "mb-4")}>
-                    <h2 className="text-lg font-semibold text-foreground">System brief</h2>
-                    {showFreeLimitUpsell ? null : (
+                showFreeLimitUpsell ? (
+                  <div className="flex min-h-[min(60vh,560px)] flex-col justify-center py-8">
+                    <PromptInput
+                      ref={promptRef}
+                      disabled={generating}
+                      generationLimitReached={generationLimitReached}
+                      generationLimitUi={limitUx}
+                      userPlan={userPlan}
+                      onSubmit={handleGenerate}
+                    />
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-border bg-card p-6 shadow-lg shadow-black/20">
+                    <div className="mb-6">
+                      <h2 className="text-lg font-semibold text-foreground">System brief</h2>
                       <p className="mt-1 text-sm text-muted-foreground">
                         Describe your system in plain English. The more detail, the better the output.
                       </p>
-                    )}
+                    </div>
+                    <PromptInput
+                      ref={promptRef}
+                      disabled={generating}
+                      generationLimitReached={generationLimitReached}
+                      generationLimitUi={limitUx}
+                      userPlan={userPlan}
+                      onSubmit={handleGenerate}
+                    />
                   </div>
-                  <PromptInput
-                    ref={promptRef}
-                    disabled={generating}
-                    generationLimitReached={generationLimitReached}
-                    generationLimitUi={limitUx}
-                    userPlan={userPlan}
-                    onSubmit={handleGenerate}
-                  />
-                </div>
+                )
               ) : null}
 
             {error ? (
@@ -410,7 +421,7 @@ export function DashboardApp() {
                   }}
                 />
                 </FadeIn>
-              ) : !isStreaming && isCreateMode ? (
+              ) : !isStreaming && isCreateMode && !generationLimitReached ? (
                 <div className="mx-auto flex max-w-sm flex-col items-center justify-center py-24 text-center">
                   <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900">
                     <ArchivoltLogo size={32} />

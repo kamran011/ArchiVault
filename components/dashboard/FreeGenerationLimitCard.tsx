@@ -50,39 +50,42 @@ export function FreeGenerationLimitCard({ planLabel, usageHint }: FreeGeneration
           Upgrade to create more architectures
         </p>
 
-        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-stretch">
-          <div
-            className={cn(
-              "flex flex-1 flex-col rounded-xl border p-4 text-left",
-              "border-cyan-500/40 bg-cyan-500/[0.06] ring-1 ring-cyan-500/20",
-            )}
-          >
-            <Button
-              type="button"
-              disabled={loading !== null}
-              className="h-auto w-full flex-col gap-1 rounded-lg bg-cyan-500 py-3.5 font-semibold text-black hover:bg-cyan-400"
-              onClick={() => void startCheckout("blueprint")}
+        <fieldset className="mt-8 min-w-0 border-0 p-0">
+          <legend className="sr-only">Choose a plan to upgrade</legend>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-stretch">
+            <div
+              className={cn(
+                "flex flex-col rounded-xl border p-4 text-left",
+                "border-cyan-500/40 bg-cyan-500/[0.06] ring-1 ring-cyan-500/20",
+              )}
             >
-              <span>{loading === "blueprint" ? "Redirecting…" : "Upgrade to Blueprint"}</span>
-              <span className="text-xs font-normal text-black/80">$49 one-time · 4 generations</span>
-            </Button>
-          </div>
+              <Button
+                type="button"
+                disabled={loading !== null}
+                className="h-auto w-full flex-col gap-1 rounded-lg bg-cyan-500 py-3.5 font-semibold text-black hover:bg-cyan-400"
+                onClick={() => void startCheckout("blueprint")}
+              >
+                <span>{loading === "blueprint" ? "Redirecting…" : "Upgrade to Blueprint"}</span>
+                <span className="text-xs font-normal text-black/80">$49 one-time · 4 generations</span>
+              </Button>
+            </div>
 
-          <div className="flex flex-1 flex-col rounded-xl border border-border bg-muted/30 p-4 text-left">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={loading !== null}
-              className="h-auto w-full flex-col gap-1 rounded-lg border border-border bg-zinc-900 py-3.5 font-semibold text-foreground hover:bg-zinc-800"
-              onClick={() => void startCheckout("pro")}
-            >
-              <span>{loading === "pro" ? "Redirecting…" : "Upgrade to Pro"}</span>
-              <span className="text-xs font-normal text-muted-foreground">
-                $29/mo · unlimited
-              </span>
-            </Button>
+            <div className="flex flex-col rounded-xl border border-border bg-muted/30 p-4 text-left">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={loading !== null}
+                className="h-auto w-full flex-col gap-1 rounded-lg border border-border bg-zinc-900 py-3.5 font-semibold text-foreground hover:bg-zinc-800"
+                onClick={() => void startCheckout("pro")}
+              >
+                <span>{loading === "pro" ? "Redirecting…" : "Upgrade to Pro"}</span>
+                <span className="text-xs font-normal text-muted-foreground">
+                  $29/mo · unlimited
+                </span>
+              </Button>
+            </div>
           </div>
-        </div>
+        </fieldset>
 
         {error ? <p className="mt-4 text-center text-sm text-red-400">{error}</p> : null}
       </div>
