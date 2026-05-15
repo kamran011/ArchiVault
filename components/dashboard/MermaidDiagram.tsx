@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sanitizeMermaidDiagram } from "@/lib/sanitize-mermaid";
+import { toPng } from "html-to-image";
 
 type MermaidApi = {
   initialize: (config: Record<string, unknown>) => void | Promise<void>;
@@ -121,21 +122,7 @@ function cloneSvgForExport(svg: SVGSVGElement): SVGSVGElement {
   return svg.cloneNode(true) as SVGSVGElement;
 }
 
-/** Chrome/Safari taint the canvas when the SVG draws foreignObject (HTML subtree) or external `<image>` URLs. */
-function stripSvgContentThatTaintsCanvas(svgRoot: SVGSVGElement) {
-  svgRoot.querySelectorAll("foreignObject").forEach((el) => el.remove());
-  svgRoot.querySelectorAll("script").forEach((el) => el.remove());
-
-  svgRoot.querySelectorAll("image").forEach((el) => {
-    const href = el.getAttribute("href") ?? el.getAttribute("xlink:href") ?? "";
-    if (/^https?:\/\//i.test(href.trim())) el.remove();
-  });
-}
-
-function applyLightExportTheme(
-  clonedSvg: SVGSVGElement,
-  options?: { stripForCanvasRaster?: boolean },
-): { svgData: string; width: number; height: number } {
+function applyLightExportTheme(clonedSvg: SVGSVGElement): { svgData: string; width: number; height: number } {
   const { width, height } = getSvgDimensions(clonedSvg);
   clonedSvg.setAttribute("width", String(width));
   clonedSvg.setAttribute("height", String(height));
@@ -151,7 +138,7 @@ function applyLightExportTheme(
   bg.setAttribute("fill", "#ffffff");
   clonedSvg.insertBefore(bg, clonedSvg.firstChild);
 
-  // Theme foreignObject labels for SVG download only; PNG path strips FO afterward to avoid tainted canvas.
+  // Edge labels may use foreignObject (HTML); theme so light PNG/SVG export is readable.
   clonedSvg.querySelectorAll("foreignObject").forEach((fo) => {
     const html = fo as SVGForeignObjectElement;
     html.style.color = "#1a1a1a";
@@ -195,10 +182,6 @@ function applyLightExportTheme(
     node.setAttribute("fill", "#1a1a1a");
   });
 
-  if (options?.stripForCanvasRaster) {
-    stripSvgContentThatTaintsCanvas(clonedSvg);
-  }
-
   const svgData = new XMLSerializer().serializeToString(clonedSvg);
 
   return { svgData, width, height };
@@ -208,59 +191,56 @@ function prepareLightExportSvg(svg: SVGSVGElement): { svgData: string; width: nu
   return applyLightExportTheme(cloneSvgForExport(svg));
 }
 
-/** Same light theme but safe to draw onto a 2D canvas (no foreignObject / cross-origin images). */
-function prepareLightExportSvgForCanvas(svg: SVGSVGElement): {
-  svgData: string;
-  width: number;
-  height: number;
-} {
-  return applyLightExportTheme(cloneSvgForExport(svg), { stripForCanvasRaster: true });
-}
+/**
+ * Rasterize via html-to-image (avoids Canvas drawImage+taint issues with SVG foreignObject while keeping labels).
+ */
+async function lightExportSvgToPngBlob(svg: SVGSVGElement): Promise<Blob | null> {
+  const { svgData, width, height } = prepareLightExportSvg(svg);
+  if (!width || !height || !svgData.trim()) return null;
 
-function lightExportSvgToPngBlob(svg: SVGSVGElement): Promise<Blob | null> {
-  const { svgData, width, height } = prepareLightExportSvgForCanvas(svg);
-  const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgData)}`;
+  const host = document.createElement("div");
+  host.setAttribute("aria-hidden", "true");
+  host.style.boxSizing = "border-box";
+  host.style.position = "fixed";
+  host.style.left = "-99999px";
+  host.style.top = "0";
+  host.style.margin = "0";
+  host.style.padding = "0";
+  host.style.width = `${width}px`;
+  host.style.height = `${height}px`;
+  host.style.overflow = "hidden";
+  host.style.backgroundColor = "#ffffff";
+  host.innerHTML = svgData;
 
-  return new Promise((resolve) => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      resolve(null);
-      return;
-    }
+  const svgEl = host.querySelector("svg");
+  if (!svgEl) {
+    return null;
+  }
 
-    const img = new Image();
+  svgEl.setAttribute("width", String(width));
+  svgEl.setAttribute("height", String(height));
+  svgEl.style.width = `${width}px`;
+  svgEl.style.height = `${height}px`;
+  svgEl.style.maxWidth = "none";
+  svgEl.style.display = "block";
 
-    img.onload = () => {
-      const w = width || img.naturalWidth || img.width;
-      const h = height || img.naturalHeight || img.height;
-      if (!w || !h) {
-        resolve(null);
-        return;
-      }
-      canvas.width = w * 2;
-      canvas.height = h * 2;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(2, 2);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, w, h);
-      try {
-        ctx.drawImage(img, 0, 0, w, h);
-      } catch {
-        resolve(null);
-        return;
-      }
-      try {
-        canvas.toBlob((blob) => resolve(blob), "image/png");
-      } catch {
-        resolve(null);
-      }
-    };
+  document.body.appendChild(host);
 
-    img.onerror = () => resolve(null);
-
-    img.src = dataUrl;
-  });
+  try {
+    const dataUrl = await toPng(host, {
+      backgroundColor: "#ffffff",
+      pixelRatio: 2,
+      cacheBust: true,
+      width,
+      height,
+    });
+    const res = await fetch(dataUrl);
+    return await res.blob();
+  } catch {
+    return null;
+  } finally {
+    host.remove();
+  }
 }
 
 export function MermaidDiagram({
