@@ -72,7 +72,7 @@ export function ExampleOutputSection() {
           <p className="mb-4 text-xs uppercase tracking-widest text-muted-foreground">
             10 volatility axes identified
           </p>
-          <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {VOLATILITY_AXES.map((axis, index) => (
               <ScrollReveal
                 key={axis.name}
@@ -89,13 +89,13 @@ export function ExampleOutputSection() {
               </ScrollReveal>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted-foreground/70">
+          <p className="mt-3 mb-4 text-xs text-muted-foreground/70">
             + 4 more axes: IDocumentGenerator, ISchedulingEngine, IComplianceEngine, IFeatureFlagService
           </p>
         </ScrollReveal>
 
         <ScrollReveal delay={80} className="text-center">
-          <p className="mb-4 text-sm text-muted-foreground">
+          <p className="mb-8 text-sm text-muted-foreground">
             This blueprint was generated in 68 seconds from a plain-English description.
           </p>
           <Link
