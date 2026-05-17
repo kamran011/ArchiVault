@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { clerkProviderAuthProps } from "@/lib/clerk-config"
+import { getClerkPublishableKey } from "@/lib/clerk-env"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/shared/ThemeProvider"
 import { ThemedToaster } from "@/components/shared/ThemedToaster"
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       >
         <ThemeProvider>
           <ClerkProvider
+            publishableKey={getClerkPublishableKey()}
             afterSignOutUrl="/"
             {...clerkProviderAuthProps()}
             appearance={{

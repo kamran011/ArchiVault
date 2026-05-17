@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { CLERK_ROOT_DOMAIN } from "@/lib/clerk-config"
+import { getClerkPublishableKey } from "@/lib/clerk-env"
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -21,7 +22,7 @@ const isPublicRoute = createRouteMatcher([
 const isApiRoute = createRouteMatcher(["/api(.*)"])
 
 const isProduction = process.env.NODE_ENV === "production"
-const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""
+const clerkPublishableKey = getClerkPublishableKey()
 
 /** Clerk proxy only for production live keys (custom domain). Avoids host_invalid on local `next start`. */
 const useClerkFrontendProxy =
