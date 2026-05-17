@@ -2,11 +2,6 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
 import type { NextFetchEvent, NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { CLERK_ROOT_DOMAIN, isClerkFrontendProxyEnabled } from "@/lib/clerk-config"
-import {
-  assertClerkKeysConfigured,
-  getClerkPublishableKey,
-  getClerkSecretKey,
-} from "@/lib/clerk-env"
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -39,8 +34,8 @@ const clerkHandler = clerkMiddleware(
     }
   },
   {
-    secretKey: getClerkSecretKey(),
-    publishableKey: getClerkPublishableKey(),
+    // Do not pass secretKey/publishableKey here — Clerk reads CLERK_SECRET_KEY from env.
+    // Passing secretKey requires CLERK_ENCRYPTION_KEY and causes MIDDLEWARE_INVOCATION_FAILED.
     domain: CLERK_ROOT_DOMAIN,
     ...(isClerkFrontendProxyEnabled()
       ? { frontendApiProxy: { enabled: true } }
@@ -64,17 +59,6 @@ export default async function middleware(
 ) {
   const wwwRedirect = redirectWwwToApex(request)
   if (wwwRedirect) return wwwRedirect
-
-  try {
-    assertClerkKeysConfigured()
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Clerk configuration error"
-    return new NextResponse(message, {
-      status: 503,
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
-    })
-  }
-
   return clerkHandler(request, event)
 }
 
