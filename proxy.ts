@@ -1,7 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
-import { CLERK_ROOT_DOMAIN } from "@/lib/clerk-config"
-import { getClerkPublishableKey } from "@/lib/clerk-env"
+import { CLERK_ROOT_DOMAIN, isClerkFrontendProxyEnabled } from "@/lib/clerk-config"
+import { getClerkPublishableKey, getClerkSecretKey } from "@/lib/clerk-env"
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -21,12 +21,7 @@ const isPublicRoute = createRouteMatcher([
 /** API routes use `auth()` in handlers; `auth.protect()` in middleware returns 404 for fetch. */
 const isApiRoute = createRouteMatcher(["/api(.*)"])
 
-const isProduction = process.env.NODE_ENV === "production"
-const clerkPublishableKey = getClerkPublishableKey()
-
-/** Clerk proxy only for production live keys (custom domain). Avoids host_invalid on local `next start`. */
-const useClerkFrontendProxy =
-  isProduction && clerkPublishableKey.startsWith("pk_live")
+const clerkSecretKey = getClerkSecretKey()
 
 export default clerkMiddleware(
   async (auth, request) => {
@@ -50,8 +45,9 @@ export default clerkMiddleware(
     }
   },
   {
+    ...(clerkSecretKey ? { secretKey: clerkSecretKey } : {}),
     domain: CLERK_ROOT_DOMAIN,
-    frontendApiProxy: { enabled: useClerkFrontendProxy },
+    frontendApiProxy: { enabled: isClerkFrontendProxyEnabled() },
   },
 )
 

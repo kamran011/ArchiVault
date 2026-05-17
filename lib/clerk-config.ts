@@ -6,19 +6,19 @@
 export const CLERK_ROOT_DOMAIN =
   process.env.NEXT_PUBLIC_CLERK_DOMAIN?.trim() || "archivolt.dev"
 
-/** Optional: load Clerk JS via your app origin (see Clerk "Proxying the Frontend API"). */
+/**
+ * Optional Frontend API proxy (https://www.archivolt.dev/__clerk).
+ * Only enable when explicitly configured in env AND in Clerk Dashboard → Domains (proxy).
+ * Auto-enabling proxy without Dashboard setup causes host_invalid / 400 on /__clerk/v1/client.
+ */
 export function getClerkProxyUrl(): string | undefined {
   const explicit = process.env.NEXT_PUBLIC_CLERK_PROXY_URL?.trim()
-  if (explicit) return explicit.replace(/\/$/, "")
+  if (!explicit) return undefined
+  return explicit.replace(/\/$/, "")
+}
 
-  // Production app runs on www; proxy must match the browser host for handshake after external redirects (e.g. Polar).
-  if (process.env.NODE_ENV === "production") {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
-    if (appUrl && !appUrl.includes("localhost")) {
-      return `${appUrl.replace(/\/$/, "")}/__clerk`
-    }
-  }
-  return undefined
+export function isClerkFrontendProxyEnabled(): boolean {
+  return Boolean(getClerkProxyUrl())
 }
 
 export function clerkProviderAuthProps(): { domain: string } | { proxyUrl: string } {
