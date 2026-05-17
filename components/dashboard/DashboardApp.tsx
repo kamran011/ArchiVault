@@ -22,6 +22,7 @@ import { FadeIn } from "@/components/shared/FadeIn";
 export function DashboardApp() {
   const exportId = React.useId().replace(/:/g, "");
   const promptRef = React.useRef<HTMLTextAreaElement>(null);
+  const streamingPreviewRef = React.useRef<HTMLDivElement>(null);
 
   const [architecture, setArchitecture] = React.useState<Architecture | null>(null);
   const [generations, setGenerations] = React.useState<GenerationRow[]>([]);
@@ -40,6 +41,14 @@ export function DashboardApp() {
   const [deleting, setDeleting] = React.useState(false);
   const [mobileHistoryOpen, setMobileHistoryOpen] = React.useState(false);
   const searchParams = useSearchParams();
+
+  React.useEffect(() => {
+    if (!isStreaming) return;
+    const frame = requestAnimationFrame(() => {
+      streamingPreviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isStreaming]);
 
   const loadPlan = React.useCallback(async () => {
     try {
@@ -269,7 +278,7 @@ export function DashboardApp() {
     onDelete: requestDelete,
   };
 
-  const studioColumnClass = "mx-auto w-full max-w-6xl px-6";
+  const studioColumnClass = "mx-auto w-full max-w-6xl px-0";
 
   const generationLimitReached = isGenerationLimitReached(userPlan, generationCount);
   const limitUx = generationLimitReached ? generationLimitUi(userPlan) : null;
@@ -331,7 +340,7 @@ export function DashboardApp() {
               </div>
 
               <div className="hidden items-start justify-between lg:flex">
-                <div className="pl-6">
+                <div className="pl-0">
                   <BrandWordmark logoSize={22} textClassName="text-base" className="mb-2" />
                   <h1 className="text-2xl font-bold tracking-tight text-foreground">Architecture studio</h1>
                   <p className="mt-2 max-w-xl text-sm text-muted-foreground">
@@ -391,7 +400,9 @@ export function DashboardApp() {
 
             <div data-export-root={exportId}>
               {isStreaming ? (
-                <StreamingPreview streamingText={streamingText} isStreaming={isStreaming} />
+                <div ref={streamingPreviewRef} className="scroll-mt-24">
+                  <StreamingPreview streamingText={streamingText} isStreaming={isStreaming} />
+                </div>
               ) : null}
 
               {!isStreaming && architecture ? (

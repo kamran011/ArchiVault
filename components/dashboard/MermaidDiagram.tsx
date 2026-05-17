@@ -424,8 +424,8 @@ export function MermaidDiagram({
       </button>
 
       <p className="text-xs text-muted-foreground">
-        Click the preview or use Expand for a larger view with zoom. Export as SVG — open or convert to PNG where you
-        need a raster image.
+        Click the preview or use Expand for a larger view with zoom. Download SVG to share or edit in Figma, docs, or
+        slides.
       </p>
 
       {/* Hidden source for full-resolution exports */}
