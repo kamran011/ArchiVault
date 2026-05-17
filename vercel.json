@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "archivolt.dev" }],
+      "destination": "https://www.archivolt.dev/:path*",
+      "permanent": true
+    }
+  ]
+}

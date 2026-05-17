@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Analytics } from "@vercel/analytics/next"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
@@ -18,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 })
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://archivolt.dev"
+const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://www.archivolt.dev"
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
@@ -45,11 +46,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         )}
       >
         <ThemeProvider>
-          <ClerkProvider afterSignOutUrl="/">
+          <ClerkProvider
+            afterSignOutUrl="/"
+            domain={process.env.NEXT_PUBLIC_CLERK_DOMAIN?.trim() || "www.archivolt.dev"}
+          >
             {children}
             <ThemedToaster />
           </ClerkProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )

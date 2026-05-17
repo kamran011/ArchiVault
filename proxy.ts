@@ -16,6 +16,14 @@ const isPublicRoute = createRouteMatcher([
 ])
 
 const isProduction = process.env.NODE_ENV === "production"
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""
+
+/** Clerk proxy only for production live keys (custom domain). Avoids host_invalid on local `next start`. */
+const useClerkFrontendProxy =
+  isProduction && clerkPublishableKey.startsWith("pk_live")
+
+const clerkDomain =
+  process.env.NEXT_PUBLIC_CLERK_DOMAIN?.trim() || "www.archivolt.dev"
 
 export default clerkMiddleware(
   async (auth, request) => {
@@ -30,8 +38,10 @@ export default clerkMiddleware(
       await auth.protect()
     }
   },
-  // Production custom domains (e.g. archivolt.dev) need this; on localhost it can interfere with dev chunks.
-  { frontendApiProxy: { enabled: isProduction } },
+  {
+    domain: clerkDomain,
+    frontendApiProxy: { enabled: useClerkFrontendProxy },
+  },
 )
 
 export const config = {
