@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { getServiceRoleClient } from "@/lib/supabase"
+import { sendWaitlistConfirmationEmail } from "@/lib/waitlist-email"
 import { WAITLIST_SPOT_LIMIT } from "@/lib/waitlist"
 
 const bodySchema = z.object({
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
   if (supabase instanceof NextResponse) return supabase
 
   const email = parsed.data.email.toLowerCase()
+  const plan = parsed.data.plan
 
   const { count, error: countErr } = await supabase
     .from("waitlist")
@@ -43,15 +45,27 @@ export async function POST(request: Request) {
 
   const { error: insertErr } = await supabase.from("waitlist").insert({
     email,
-    plan: parsed.data.plan,
+    plan,
   })
 
-  if (insertErr) {
-    if (insertErr.code === "23505") {
-      return NextResponse.json({ ok: true, alreadyJoined: true })
-    }
+  const alreadyJoined = insertErr?.code === "23505"
+  if (insertErr && !alreadyJoined) {
     return NextResponse.json({ error: "Could not join waitlist" }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true })
+  const emailResult = await sendWaitlistConfirmationEmail(email, plan)
+  if (!emailResult.ok) {
+    const status = emailResult.error.includes("not configured") ? 503 : 502
+    return NextResponse.json(
+      {
+        error:
+          status === 503
+            ? "Email service is not configured yet. Try again shortly."
+            : "Could not send confirmation email. Check your address and try again.",
+      },
+      { status },
+    )
+  }
+
+  return NextResponse.json({ ok: true, alreadyJoined })
 }

@@ -79,12 +79,12 @@ export default function Home() {
               {
                 num: "01",
                 title: "Describe your system",
-                desc: "Plain English beats boxes and lines. Outline actors, integrations, workflows, scale, and what must never break.",
+                desc: "Tell us what your system does: who uses it, what services it connects to, and what can\u2019t change. Plain English only.",
               },
               {
                 num: "02",
                 title: "Isolate volatility axes",
-                desc: "The AI hunts for what WILL change independently \u2014 carriers, gateways, tenants, jurisdictions \u2014 behind stable I-prefixed contracts.",
+                desc: "Claude hunts for what WILL change independently \u2014 payment providers, notification channels, storage backends \u2014 behind stable adapter contracts.",
               },
               {
                 num: "03",

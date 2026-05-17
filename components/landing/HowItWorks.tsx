@@ -2,17 +2,17 @@ const steps = [
   {
     step: "01",
     title: "Describe your system",
-    body: "Plain English beats boxes and lines. Outline actors, integrations, workflows, scale, and what must never break.",
+    body: "Tell us what your system does: who uses it, what services it connects to, and what can't change. Plain English only.",
   },
   {
     step: "02",
     title: "Isolate volatility axes",
-    body: "The model finds what will change on its own — carriers, gateways, tenants, modalities — behind stable I-prefixed contracts.",
+    body: "Claude hunts for what WILL change independently — payment providers, notification channels, storage backends — behind stable adapter contracts.",
   },
   {
     step: "03",
     title: "Ship diagrams + roadmap",
-    body: "Get a Mermaid map, adapters, cores, sequencing, technical guidance, and a volatility score you can iterate on.",
+    body: "Get a Mermaid architecture map, adapter contracts, build sequencing, tech guidance, and a volatility score.",
   },
 ];
 

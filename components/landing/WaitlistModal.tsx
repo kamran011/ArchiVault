@@ -20,12 +20,14 @@ export function WaitlistModal({ open, plan, onOpenChange }: WaitlistModalProps) 
   const [email, setEmail] = React.useState("")
   const [submitting, setSubmitting] = React.useState(false)
   const [confirmed, setConfirmed] = React.useState(false)
+  const [submittedEmail, setSubmittedEmail] = React.useState("")
 
   React.useEffect(() => {
     if (!open) {
       setEmail("")
       setSubmitting(false)
       setConfirmed(false)
+      setSubmittedEmail("")
     }
   }, [open])
 
@@ -48,8 +50,9 @@ export function WaitlistModal({ open, plan, onOpenChange }: WaitlistModalProps) 
         throw new Error(data.error ?? "Could not join waitlist")
       }
 
+      setSubmittedEmail(email.trim())
       setConfirmed(true)
-      toast.success("Check your email!")
+      toast.success("Confirmation sent to your email")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not join waitlist")
     } finally {
@@ -82,7 +85,10 @@ export function WaitlistModal({ open, plan, onOpenChange }: WaitlistModalProps) 
               <DialogPrimitive.Title className="text-xl font-semibold text-foreground">
                 You&apos;re on the list
               </DialogPrimitive.Title>
-              <p className="text-sm text-muted-foreground">Check your email!</p>
+              <p className="text-sm text-muted-foreground">
+                Confirmation sent to{" "}
+                <span className="font-medium text-foreground">{submittedEmail}</span>
+              </p>
               <Button
                 type="button"
                 className="w-full bg-cyan-500 font-semibold text-black hover:bg-cyan-400"
