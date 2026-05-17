@@ -1,12 +1,8 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
-import { paddleFetch, PaddleApiError } from "@/lib/paddle"
-import { parseCancelsAtFromSubscription, type PaddleSubscriptionPayload } from "@/lib/paddle-plans"
+import { createPolarClient } from "@/lib/polar"
+import { parseCancelsAtFromSubscription } from "@/lib/polar-plans"
 import { getServiceRoleClient } from "@/lib/supabase"
-
-type PaddleSubscriptionResponse = {
-  data?: PaddleSubscriptionPayload
-}
 
 export async function POST() {
   const { userId } = await auth()
@@ -19,7 +15,7 @@ export async function POST() {
 
   const { data: user, error: loadErr } = await supabase
     .from("users")
-    .select("plan, paddle_subscription_id, subscription_status")
+    .select("plan, polar_subscription_id, subscription_status")
     .eq("clerk_id", userId)
     .maybeSingle()
 
@@ -33,7 +29,7 @@ export async function POST() {
     return NextResponse.json({ error: "No active subscription to cancel" }, { status: 400 })
   }
 
-  const subId = user?.paddle_subscription_id
+  const subId = user?.polar_subscription_id
   if (!subId) {
     return NextResponse.json({ error: "Subscription not found" }, { status: 400 })
   }
@@ -43,15 +39,15 @@ export async function POST() {
   }
 
   try {
-    const result = await paddleFetch<PaddleSubscriptionResponse>(`/subscriptions/${subId}`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        scheduled_change: { action: "cancel" },
-      }),
+    const polar = createPolarClient()
+    const sub = await polar.subscriptions.update({
+      id: subId,
+      subscriptionUpdate: {
+        cancelAtPeriodEnd: true,
+      },
     })
 
-    const sub = result.data
-    const cancelsAt = sub ? parseCancelsAtFromSubscription(sub) : null
+    const cancelsAt = parseCancelsAtFromSubscription(sub)
 
     const { error: updateErr } = await supabase
       .from("users")
@@ -62,7 +58,7 @@ export async function POST() {
       .eq("clerk_id", userId)
 
     if (updateErr) {
-      console.error("[paddle cancel] db update failed:", updateErr)
+      console.error("[polar cancel] db update failed:", updateErr)
       return NextResponse.json({ error: "Failed to update subscription status" }, { status: 500 })
     }
 
@@ -72,9 +68,7 @@ export async function POST() {
     })
   } catch (e) {
     console.error(e)
-    if (e instanceof PaddleApiError) {
-      return NextResponse.json({ error: e.message }, { status: 502 })
-    }
-    return NextResponse.json({ error: "Could not cancel subscription" }, { status: 502 })
+    const message = e instanceof Error ? e.message : "Could not cancel subscription"
+    return NextResponse.json({ error: message }, { status: 502 })
   }
 }

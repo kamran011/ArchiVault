@@ -11,6 +11,7 @@ const PLAN_LABELS: Record<CheckoutPlan, string> = {
   blueprint: "Blueprint",
   pro: "Pro",
   team: "Team",
+  test: "Test checkout",
 }
 
 const PRODUCTION_URL = "https://archivolt.dev"

@@ -10,11 +10,15 @@ const isPublicRoute = createRouteMatcher([
   "/terms(.*)",
   "/refund(.*)",
   "/contact(.*)",
-  "/api/paddle/webhook(.*)",
+  "/pricing(.*)",
+  "/api/polar/webhook(.*)",
   "/api/clerk/webhook(.*)",
   "/api/webhooks/clerk(.*)",
   "/api/waitlist",
 ])
+
+/** API routes use `auth()` in handlers; `auth.protect()` in middleware returns 404 for fetch. */
+const isApiRoute = createRouteMatcher(["/api(.*)"])
 
 const isProduction = process.env.NODE_ENV === "production"
 const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""
@@ -40,7 +44,7 @@ export default clerkMiddleware(
       return NextResponse.next()
     }
 
-    if (!isPublicRoute(request)) {
+    if (!isPublicRoute(request) && !isApiRoute(request)) {
       await auth.protect()
     }
   },

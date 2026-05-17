@@ -9,7 +9,8 @@ import type { UserPlan } from "@/lib/plan-gate";
 import type { CheckoutPlan, GenerationLimitUi } from "@/lib/plans";
 import { nextUpgradePlan } from "@/lib/plans";
 import { PricingCtaLink } from "@/components/shared/PricingCtaLink";
-import { startCheckout as startPaddleCheckout } from "@/lib/billing/checkout";
+import { startCheckout } from "@/lib/billing/checkout";
+import { DevTestCheckoutButton } from "@/components/billing/DevTestCheckoutButton";
 
 type GenerationLimitUpgradeProps = {
   userPlan: UserPlan;
@@ -104,7 +105,7 @@ export function GenerationLimitUpgrade({ userPlan, limitUi }: GenerationLimitUpg
     setError(null);
     setLoading(plan);
     try {
-      const url = await startPaddleCheckout(plan);
+      const url = await startCheckout(plan);
       window.location.href = url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout failed");
@@ -208,12 +209,15 @@ export function GenerationLimitUpgrade({ userPlan, limitUi }: GenerationLimitUpg
               </PricingCtaLink>
             )}
           </div>
-          <PricingCtaLink
-            href="/#pricing"
-            className="text-sm font-medium text-cyan-400 underline-offset-4 hover:text-cyan-300 hover:underline"
-          >
-            Compare all plans
-          </PricingCtaLink>
+          <div className="flex flex-col items-center gap-3">
+            <PricingCtaLink
+              href="/pricing"
+              className="text-sm font-medium text-cyan-400 underline-offset-4 hover:text-cyan-300 hover:underline"
+            >
+              Compare all plans
+            </PricingCtaLink>
+            <DevTestCheckoutButton variant="outline" />
+          </div>
         </div>
       </div>
     </div>

@@ -1,13 +1,15 @@
 import "server-only"
+
 import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js"
 import type { UserPlan } from "@/lib/plan-gate"
 import {
-  clerkIdFromCustomData,
+  clerkIdFromPolar,
+  paidPlanFromCheckoutMetadata,
   parseCancelsAtFromSubscription,
   resolvePlanFromSubscription,
   subscriptionPlanForStatus,
-  type PaddleSubscriptionPayload,
-} from "@/lib/paddle-plans"
+} from "@/lib/polar-plans"
 
 export async function applySubscriptionCanceled(
   supabase: SupabaseClient,
@@ -17,8 +19,8 @@ export async function applySubscriptionCanceled(
     .from("users")
     .update({
       plan: "free",
-      paddle_subscription_id: null,
-      paddle_customer_id: null,
+      polar_subscription_id: null,
+      polar_customer_id: null,
       subscription_status: null,
       subscription_cancels_at: null,
     })
@@ -27,9 +29,9 @@ export async function applySubscriptionCanceled(
 
 export async function applySubscriptionUpdated(
   supabase: SupabaseClient,
-  sub: PaddleSubscriptionPayload,
+  sub: Subscription,
 ): Promise<void> {
-  const clerkId = clerkIdFromCustomData(sub.custom_data ?? undefined)
+  const clerkId = clerkIdFromPolar(sub.metadata as { [k: string]: unknown }, sub.customer)
   if (!clerkId || !sub.id) return
 
   const status = sub.status
@@ -39,12 +41,12 @@ export async function applySubscriptionUpdated(
     return
   }
 
-  if (status === "past_due" || status === "paused") {
+  if (status === "past_due" || status === "unpaid") {
     await supabase
       .from("users")
       .update({
         plan: "free",
-        paddle_subscription_id: null,
+        polar_subscription_id: null,
         subscription_status: null,
         subscription_cancels_at: null,
       })
@@ -52,15 +54,15 @@ export async function applySubscriptionUpdated(
     return
   }
 
-  const scheduledCancel = sub.scheduled_change?.action === "cancel"
-  if (scheduledCancel && isSubscriptionActiveStatus(status)) {
+  if (sub.cancelAtPeriodEnd && isSubscriptionActiveStatus(status)) {
     const cancelsAt = parseCancelsAtFromSubscription(sub)
     await supabase
       .from("users")
       .update({
         subscription_status: "scheduled_cancellation",
         subscription_cancels_at: cancelsAt,
-        paddle_subscription_id: sub.id,
+        polar_subscription_id: sub.id,
+        polar_customer_id: sub.customerId,
       })
       .eq("clerk_id", clerkId)
     return
@@ -73,7 +75,8 @@ export async function applySubscriptionUpdated(
       .from("users")
       .update({
         plan,
-        paddle_subscription_id: sub.id,
+        polar_subscription_id: sub.id,
+        polar_customer_id: sub.customerId,
         subscription_status: "active",
         subscription_cancels_at: null,
       })
@@ -87,9 +90,9 @@ function isSubscriptionActiveStatus(status: string | undefined): boolean {
 
 export async function applySubscriptionActivated(
   supabase: SupabaseClient,
-  sub: PaddleSubscriptionPayload,
+  sub: Subscription,
 ): Promise<void> {
-  const clerkId = clerkIdFromCustomData(sub.custom_data ?? undefined)
+  const clerkId = clerkIdFromPolar(sub.metadata as { [k: string]: unknown }, sub.customer)
   if (!clerkId || !sub.id) return
 
   const plan = resolvePlanFromSubscription(sub)
@@ -99,24 +102,28 @@ export async function applySubscriptionActivated(
     .from("users")
     .update({
       plan,
-      paddle_subscription_id: sub.id,
+      polar_subscription_id: sub.id,
+      polar_customer_id: sub.customerId,
       subscription_status: "active",
       subscription_cancels_at: null,
     })
     .eq("clerk_id", clerkId)
 }
 
-export async function applyTransactionCompleted(
+export async function applyOrderPaid(
   supabase: SupabaseClient,
   payload: {
-    custom_data?: { clerk_id?: string; plan?: string } | null
-    subscription_id?: string | null
-    customer_id?: string | null
+    metadata?: { [k: string]: unknown } | null
+    customer?: { externalId?: string | null; id?: string } | null
+    productId?: string | null
+    subscriptionId?: string | null
   },
 ): Promise<void> {
-  const clerkId = clerkIdFromCustomData(payload.custom_data ?? undefined)
-  const plan = payload.custom_data?.plan
-  if (!clerkId || (plan !== "blueprint" && plan !== "pro" && plan !== "team")) return
+  const clerkId = clerkIdFromPolar(payload.metadata ?? undefined, payload.customer ?? undefined)
+  const planRaw =
+    typeof payload.metadata?.plan === "string" ? payload.metadata.plan : undefined
+  const plan = paidPlanFromCheckoutMetadata(planRaw)
+  if (!clerkId || !plan) return
 
   const isSubscription = plan === "pro" || plan === "team"
 
@@ -124,8 +131,8 @@ export async function applyTransactionCompleted(
     .from("users")
     .update({
       plan,
-      ...(payload.customer_id ? { paddle_customer_id: payload.customer_id } : {}),
-      paddle_subscription_id: isSubscription ? (payload.subscription_id ?? null) : null,
+      ...(payload.customer?.id ? { polar_customer_id: payload.customer.id } : {}),
+      polar_subscription_id: isSubscription ? (payload.subscriptionId ?? null) : null,
       subscription_status: isSubscription ? "active" : null,
       subscription_cancels_at: null,
     })

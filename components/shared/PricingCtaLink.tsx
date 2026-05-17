@@ -14,7 +14,7 @@ type PricingCtaLinkProps = {
   children: React.ReactNode
 }
 
-function isPricingHref(href: string): boolean {
+function isHomePricingHash(href: string): boolean {
   return href === "/#pricing" || href.endsWith("#pricing")
 }
 
@@ -25,7 +25,7 @@ function isPricingHref(href: string): boolean {
 export function PricingCtaLink({ href, className, children }: PricingCtaLinkProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const isPricing = isPricingHref(href)
+  const isHomeHash = isHomePricingHash(href)
 
   return (
     <Link
@@ -33,7 +33,7 @@ export function PricingCtaLink({ href, className, children }: PricingCtaLinkProp
       scroll={false}
       className={className}
       onClick={(e) => {
-        if (!isPricing) return
+        if (!isHomeHash) return
         if (pathname === "/") {
           e.preventDefault()
           scrollToPricingSection()
@@ -45,7 +45,7 @@ export function PricingCtaLink({ href, className, children }: PricingCtaLinkProp
         } catch {
           /* private mode etc. */
         }
-        router.push("/#pricing")
+        router.push("/pricing")
       }}
     >
       {children}

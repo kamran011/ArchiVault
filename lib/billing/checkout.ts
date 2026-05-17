@@ -1,7 +1,7 @@
 import type { CheckoutPlan } from "@/lib/plans"
 
 export async function startCheckout(plan: CheckoutPlan): Promise<string> {
-  const res = await fetch("/api/paddle/checkout", {
+  const res = await fetch("/api/polar/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ plan }),

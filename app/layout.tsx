@@ -29,10 +29,7 @@ export const metadata: Metadata = {
   description:
     "Design your system around change with Volatility-Based Decomposition \u2014 stable interfaces for volatile axes, Mermaid diagrams, and a roadmap you can ship.",
   icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "48x48" },
-      { url: "/icon.png", type: "image/png", sizes: "32x32" },
-    ],
+    icon: [{ url: "/favicon.ico", sizes: "48x48" }],
     apple: "/apple-icon.png",
     shortcut: "/favicon.ico",
   },

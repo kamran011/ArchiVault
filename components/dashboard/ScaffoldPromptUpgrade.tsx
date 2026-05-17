@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
-import { startCheckout as startPaddleCheckout } from "@/lib/billing/checkout";
+import { startCheckout } from "@/lib/billing/checkout";
 
 const EXAMPLE_SCAFFOLD = `Build a CoursePlatform using Volatility-Based Decomposition architecture.
 
@@ -60,7 +60,7 @@ export function ScaffoldPromptUpgrade() {
     setError(null);
     setLoading(true);
     try {
-      const url = await startPaddleCheckout("blueprint");
+      const url = await startCheckout("blueprint");
       window.location.href = url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout failed");

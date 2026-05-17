@@ -1,6 +1,13 @@
 import type { UserPlan } from "@/lib/plan-gate"
 
-export type CheckoutPlan = "blueprint" | "pro" | "team"
+export type CheckoutPlan = "blueprint" | "pro" | "team" | "test"
+
+export const TEST_CHECKOUT_PLAN = "test" satisfies CheckoutPlan
+
+/** Show $2 Polar test tier/buttons in local dev only. */
+export function isDevTestCheckoutAvailable(): boolean {
+  return process.env.NODE_ENV === "development"
+}
 
 export type PricingTier = {
   id: string
@@ -42,8 +49,6 @@ export const PRICING_TIERS: PricingTier[] = [
     price: "$49",
     priceSuffix: " once",
     badge: "BEST FOR BUILDERS",
-    statusBadge: "Coming Soon",
-    launchSubtext: "Payment processing launching this week",
     description: "Ship one product without a monthly subscription.",
     features: [
       "4 total generations (includes your free one)",
@@ -51,9 +56,8 @@ export const PRICING_TIERS: PricingTier[] = [
       "Full scaffold prompt for AI coding agents",
     ],
     checkoutPlan: "blueprint",
-    cta: "Join Waitlist",
+    cta: "Get Blueprint",
     href: null,
-    comingSoon: true,
   },
   {
     id: "pro",
@@ -61,8 +65,6 @@ export const PRICING_TIERS: PricingTier[] = [
     price: "$29",
     priceSuffix: "/mo",
     badge: "MOST POPULAR",
-    statusBadge: "Coming Soon",
-    launchSubtext: "Payment processing launching this week",
     description: "For teams iterating on multiple products.",
     features: [
       "Unlimited generations (fair use)",
@@ -70,10 +72,9 @@ export const PRICING_TIERS: PricingTier[] = [
       "Tech stack analysis tab",
     ],
     checkoutPlan: "pro",
-    cta: "Join Waitlist",
+    cta: "Subscribe to Pro",
     href: null,
     highlighted: true,
-    comingSoon: true,
   },
   {
     id: "team",
@@ -81,8 +82,6 @@ export const PRICING_TIERS: PricingTier[] = [
     price: "$49",
     priceSuffix: "/mo",
     badge: "FOR TEAMS",
-    statusBadge: "Coming Soon",
-    launchSubtext: "Payment processing launching this week",
     description: "For design reviews, agencies, and shared standards.",
     features: [
       "Everything in Pro",
@@ -90,11 +89,29 @@ export const PRICING_TIERS: PricingTier[] = [
       "Scaling & data-flow summary",
     ],
     checkoutPlan: "team",
-    cta: "Join Waitlist",
+    cta: "Subscribe to Team",
     href: null,
-    comingSoon: true,
   },
 ]
+
+const TEST_CHECKOUT_TIER: PricingTier = {
+  id: "test",
+  name: "Test checkout",
+  price: "$2",
+  priceSuffix: " once",
+  badge: "DEV ONLY",
+  description: "Cheap one-time payment to verify Polar checkout + webhooks locally.",
+  features: ["Same flow as Blueprint", "Grants Blueprint after payment (webhook)", "Use card 4242 4242 4242 4242"],
+  checkoutPlan: TEST_CHECKOUT_PLAN,
+  cta: "Pay $2 (test)",
+  href: null,
+}
+
+/** Pricing cards for UI; includes $2 test tier in development when configured server-side. */
+export function pricingTiersForDisplay(): PricingTier[] {
+  if (!isDevTestCheckoutAvailable()) return PRICING_TIERS
+  return [...PRICING_TIERS, TEST_CHECKOUT_TIER]
+}
 
 /** Max lifetime core generations; `null` = unlimited (pro/team). */
 export function generationLimitForPlan(plan: UserPlan): number | null {
@@ -130,7 +147,7 @@ export type GenerationLimitUi = {
 
 /** Copy shown when limit is reached; only call when limit reached so Pro/Team return null-safe defaults. */
 export function generationLimitUi(plan: UserPlan): GenerationLimitUi {
-  const pricingHref = "/#pricing"
+  const pricingHref = "/pricing"
 
   switch (plan) {
     case "free":

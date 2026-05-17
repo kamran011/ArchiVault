@@ -16,6 +16,7 @@ import { startCheckout } from "@/lib/billing/checkout";
 import { formatSubscriptionCancelDate, planDisplayName } from "@/lib/format-subscription-date";
 import { toast } from "sonner";
 import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
+import { DevTestCheckoutButton } from "@/components/billing/DevTestCheckoutButton";
 
 export type GenerationRow = {
   id: string;
@@ -80,7 +81,7 @@ export function DashboardSidebar({
   async function handleCancelConfirm() {
     setCanceling(true);
     try {
-      const res = await fetch("/api/paddle/cancel-subscription", { method: "POST" });
+      const res = await fetch("/api/polar/cancel-subscription", { method: "POST" });
       const data = (await res.json()) as { error?: string; message?: string; cancelsAt?: string }
       if (!res.ok) throw new Error(data.error ?? "Could not cancel subscription");
       toast.success("Subscription scheduled to cancel");
@@ -208,7 +209,7 @@ export function DashboardSidebar({
                 {upgrading ? "…" : "Upgrade"}
               </button>
             ) : (
-              <PricingCtaLink href="/#pricing" className={upgradeButtonClass}>
+              <PricingCtaLink href="/pricing" className={upgradeButtonClass}>
                 Plans
               </PricingCtaLink>
             )}
@@ -224,6 +225,12 @@ export function DashboardSidebar({
             Cancel subscription
           </button>
         ) : null}
+
+        <DevTestCheckoutButton
+          fullWidth
+          variant="ghost"
+          className="mt-2 h-auto border border-dashed border-amber-500/40 py-2 text-xs text-amber-200/90 hover:bg-amber-500/10 hover:text-amber-100"
+        />
       </div>
 
       <CancelSubscriptionDialog

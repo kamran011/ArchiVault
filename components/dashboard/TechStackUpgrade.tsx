@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 import type { UserPlan } from "@/lib/plan-gate";
 import { nextUpgradePlan } from "@/lib/plans";
-import { startCheckout as startPaddleCheckout } from "@/lib/billing/checkout";
+import { startCheckout } from "@/lib/billing/checkout";
 
 export function TechStackUpgrade({ userPlan }: { userPlan: UserPlan }) {
   const [loading, setLoading] = React.useState(false);
@@ -16,7 +16,7 @@ export function TechStackUpgrade({ userPlan }: { userPlan: UserPlan }) {
     setError(null);
     setLoading(true);
     try {
-      const url = await startPaddleCheckout(upgradePlan);
+      const url = await startCheckout(upgradePlan);
       window.location.href = url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout failed");

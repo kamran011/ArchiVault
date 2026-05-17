@@ -3,25 +3,18 @@ import { NextResponse } from "next/server"
 import { getServiceRoleClient } from "@/lib/supabase"
 import type { UserPlan } from "@/lib/plan-gate"
 import { resolveSimulatedPlan, resolveSimulatedGenerationCount } from "@/lib/dev-plan-simulate"
-import { paddleFetch } from "@/lib/paddle"
-import {
-  parseCancelsAtFromSubscription,
-  type PaddleSubscriptionPayload,
-} from "@/lib/paddle-plans"
+import { createPolarClient } from "@/lib/polar"
+import { parseCancelsAtFromSubscription } from "@/lib/polar-plans"
+import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js"
 
-type PaddleSubscriptionResponse = {
-  data?: PaddleSubscriptionPayload
-}
-
-async function billingPeriodEndFromPaddle(subscriptionId: string): Promise<string | null> {
+async function billingPeriodEndFromPolar(subscriptionId: string): Promise<string | null> {
   try {
-    const result = await paddleFetch<PaddleSubscriptionResponse>(
-      `/subscriptions/${subscriptionId}`,
-    )
-    const sub = result.data
-    if (!sub) return null
+    const polar = createPolarClient()
+    const sub = await polar.subscriptions.get({ id: subscriptionId })
     return (
-      parseCancelsAtFromSubscription(sub) ?? sub.current_billing_period?.ends_at ?? null
+      parseCancelsAtFromSubscription(sub as Subscription) ??
+      sub.currentPeriodEnd?.toISOString() ??
+      null
     )
   } catch {
     return null
@@ -40,7 +33,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("users")
     .select(
-      "plan, generation_count, subscription_status, subscription_cancels_at, paddle_subscription_id",
+      "plan, generation_count, subscription_status, subscription_cancels_at, polar_subscription_id",
     )
     .eq("clerk_id", userId)
     .maybeSingle()
@@ -59,11 +52,11 @@ export async function GET() {
 
   if (
     !subscriptionCancelsAt &&
-    data?.paddle_subscription_id &&
+    data?.polar_subscription_id &&
     (plan === "pro" || plan === "team") &&
     subscriptionStatus !== "scheduled_cancellation"
   ) {
-    const periodEnd = await billingPeriodEndFromPaddle(data.paddle_subscription_id)
+    const periodEnd = await billingPeriodEndFromPolar(data.polar_subscription_id)
     if (periodEnd) subscriptionCancelsAt = periodEnd
   }
 
