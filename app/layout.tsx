@@ -18,12 +18,19 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 })
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://archivolt.dev"
+
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title: "Archivolt | Volatility-based architecture planning",
   description:
     "Design your system around change with Volatility-Based Decomposition \u2014 stable interfaces for volatile axes, Mermaid diagrams, and a roadmap you can ship.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: "/apple-icon.png",
     shortcut: "/favicon.ico",
   },
 }
