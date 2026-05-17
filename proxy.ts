@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
+import { CLERK_ROOT_DOMAIN } from "@/lib/clerk-config"
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -22,11 +23,16 @@ const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""
 const useClerkFrontendProxy =
   isProduction && clerkPublishableKey.startsWith("pk_live")
 
-const clerkDomain =
-  process.env.NEXT_PUBLIC_CLERK_DOMAIN?.trim() || "www.archivolt.dev"
-
 export default clerkMiddleware(
   async (auth, request) => {
+    const host = request.headers.get("host")?.split(":")[0]
+    if (host === "archivolt.dev") {
+      const url = request.nextUrl.clone()
+      url.host = "www.archivolt.dev"
+      url.protocol = "https:"
+      return NextResponse.redirect(url, 308)
+    }
+
     const p = request.nextUrl.pathname
     // Never run auth on Next internals — some `/_next/*` paths still hit middleware in dev/prod.
     // Calling `auth.protect()` there can rewrite/404 chunks → HTML loads with zero CSS (broken UI).
@@ -39,7 +45,7 @@ export default clerkMiddleware(
     }
   },
   {
-    domain: clerkDomain,
+    domain: CLERK_ROOT_DOMAIN,
     frontendApiProxy: { enabled: useClerkFrontendProxy },
   },
 )

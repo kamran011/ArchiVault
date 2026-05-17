@@ -9,29 +9,10 @@ type AuthNavProps = {
   variant?: "landing" | "header"
 }
 
-function AuthNavPlaceholder({ variant }: { variant: "landing" | "header" }) {
-  return (
-    <div
-      aria-hidden
-      className={cn(
-        "flex items-center",
-        variant === "landing" ? "gap-3" : "gap-2 sm:gap-3",
-      )}
-    >
-      <div className="h-8 w-16 rounded-lg bg-card" />
-      <div className="h-8 w-24 rounded-lg bg-card" />
-    </div>
-  )
-}
-
 export function AuthNav({ variant = "landing" }: AuthNavProps) {
   const { isLoaded, isSignedIn } = useAuth()
 
-  if (!isLoaded) {
-    return <AuthNavPlaceholder variant={variant} />
-  }
-
-  if (isSignedIn) {
+  if (isLoaded && isSignedIn) {
     return (
       <div className={cn("flex items-center", variant === "landing" ? "gap-3" : "gap-2 sm:gap-3")}>
         <Link
