@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { SupportEmailLink } from "@/components/shared/SupportEmailLink"
 
 const FAQS = [
   {
@@ -15,7 +16,7 @@ const FAQS = [
   },
   {
     q: "Is the generated architecture actually usable in production?",
-    a: "Yes. The output includes typed interface names (IPaymentProcessor, INotificationSender), concrete adapter recommendations for today, alternative adapters for the future, a dependency injection wiring guide, and a scaffold prompt you can paste into leading AI coding agents to generate the actual project structure.",
+    a: "Yes. The output includes typed interface names (IPaymentProcessor, INotificationSender), concrete adapter recommendations for today, alternative adapters for the future, a dependency injection wiring guide, and a scaffold prompt you can paste into AI coding agents to generate the actual project structure.",
   },
   {
     q: "What's the difference between Blueprint and Pro?",
@@ -39,15 +40,26 @@ const FAQS = [
   },
 ] as const
 
-function FaqItem({ question, answer }: { question: string; answer: string }) {
-  const [open, setOpen] = React.useState(false)
+type FaqItemProps = {
+  question: string
+  answer: string
+  open: boolean
+  onToggle: () => void
+}
+
+function FaqItem({ question, answer, open, onToggle }: FaqItemProps) {
   const panelId = React.useId()
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border">
+    <div
+      className={cn(
+        "overflow-hidden rounded-xl border transition-colors duration-300 ease-out",
+        open ? "border-cyan-500/40" : "border-border",
+      )}
+    >
       <button
         type="button"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={onToggle}
         aria-expanded={open}
         aria-controls={panelId}
         className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left transition-colors hover:bg-card"
@@ -55,25 +67,40 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
         <span className="pr-4 text-sm font-medium text-foreground">{question}</span>
         <ChevronDown
           className={cn(
-            "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+            "size-4 shrink-0 text-muted-foreground transition-transform duration-300 ease-out motion-reduce:transition-none",
             open && "rotate-180",
           )}
           aria-hidden
         />
       </button>
-      {open ? (
-        <div
-          id={panelId}
-          className="border-t border-border px-6 pb-5 pt-4 text-sm leading-relaxed text-muted-foreground"
-        >
-          {answer}
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-in-out motion-reduce:duration-0",
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div
+            id={panelId}
+            role="region"
+            aria-hidden={!open}
+            className={cn(
+              "border-t border-border px-6 pb-5 pt-4 text-sm leading-relaxed text-muted-foreground",
+              "transition-opacity duration-300 ease-in-out motion-reduce:transition-none",
+              open ? "opacity-100" : "opacity-0",
+            )}
+          >
+            {answer}
+          </div>
         </div>
-      ) : null}
+      </div>
     </div>
   )
 }
 
 export function FaqSection() {
+  const [openIndex, setOpenIndex] = React.useState<number | null>(null)
+
   return (
     <section className="border-t border-border/50 px-6 py-24">
       <div className="mx-auto max-w-3xl">
@@ -83,16 +110,20 @@ export function FaqSection() {
         </div>
 
         <div className="space-y-3">
-          {FAQS.map((faq) => (
-            <FaqItem key={faq.q} question={faq.q} answer={faq.a} />
+          {FAQS.map((faq, index) => (
+            <FaqItem
+              key={faq.q}
+              question={faq.q}
+              answer={faq.a}
+              open={openIndex === index}
+              onToggle={() => setOpenIndex((prev) => (prev === index ? null : index))}
+            />
           ))}
         </div>
 
-        <p className="mt-12 text-center text-sm text-muted-foreground">
-          Still have questions?{" "}
-          <a href="mailto:support@archivolt.dev" className="text-cyan-400 transition-colors hover:text-cyan-300">
-            Email us
-          </a>
+        <p className="mt-12 flex flex-wrap items-center justify-center gap-1 text-center text-sm text-muted-foreground">
+          <span>Still have questions?</span>
+          <SupportEmailLink />
         </p>
       </div>
     </section>

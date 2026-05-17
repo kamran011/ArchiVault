@@ -32,6 +32,7 @@ import { resolveFutureProofRationale } from "@/lib/future-proof-rationale";
 import { ExportPdfLocked } from "./ExportPdfLocked";
 import { ScaffoldPromptUpgrade } from "./ScaffoldPromptUpgrade";
 import { SystemDesignTab } from "./SystemDesignTab";
+import { SystemDesignUpgrade } from "./SystemDesignUpgrade";
 import { ScaffoldPromptTab } from "./ScaffoldPromptTab";
 import { TechStackTab } from "./TechStackTab";
 import { TechStackUpgrade } from "./TechStackUpgrade";
@@ -260,13 +261,16 @@ export function ArchitectureOutput({
         </TabsContent>
 
         <TabsContent value="systemdesign" className="mt-4 w-full outline-none">
-          <SystemDesignTab
-            key={generationId ?? "draft"}
-            architecture={data}
-            generationId={generationId}
-            userPlan={userPlan}
-            onSystemDesignUpdate={onSystemDesignUpdate}
-          />
+          {!hasTeamAccess ? (
+            <SystemDesignUpgrade />
+          ) : (
+            <SystemDesignTab
+              key={generationId ?? "draft"}
+              architecture={data}
+              generationId={generationId}
+              onSystemDesignUpdate={onSystemDesignUpdate}
+            />
+          )}
         </TabsContent>
       </Tabs>
     </div>

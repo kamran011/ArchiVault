@@ -71,6 +71,30 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
         "4xl": "2rem",
       },
+      keyframes: {
+        fadeInUp: {
+          from: { opacity: "0", transform: "translateY(20px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        pulseGlow: {
+          "0%, 100%": { opacity: "0.8", transform: "scale(1)" },
+          "50%": { opacity: "1", transform: "scale(1.02)" },
+        },
+        fadeIn: {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        popularBadgePulse: {
+          "0%, 100%": { boxShadow: "0 0 0 0 rgb(6 182 212 / 0.35)" },
+          "50%": { boxShadow: "0 0 14px 2px rgb(6 182 212 / 0.4)" },
+        },
+      },
+      animation: {
+        "fade-in-up": "fadeInUp 400ms ease-out forwards",
+        "pulse-glow": "pulseGlow 3s ease-in-out infinite",
+        "fade-in": "fadeIn 400ms ease-out forwards",
+        "popular-badge": "popularBadgePulse 3s ease-in-out infinite",
+      },
     },
   },
   plugins: [tailwindcssAnimate],

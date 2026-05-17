@@ -5,24 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 import type { UserPlan } from "@/lib/plan-gate";
 import { nextUpgradePlan } from "@/lib/plans";
+import { startCheckout as startPaddleCheckout } from "@/lib/billing/checkout";
 
 export function TechStackUpgrade({ userPlan }: { userPlan: UserPlan }) {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const upgradePlan = nextUpgradePlan(userPlan) ?? "pro";
 
-  async function startCheckout() {
+  async function handleCheckout() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: upgradePlan }),
-      });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Checkout failed");
-      if (data.url) window.location.href = data.url;
+      const url = await startPaddleCheckout(upgradePlan);
+      window.location.href = url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout failed");
     } finally {
@@ -59,7 +54,7 @@ export function TechStackUpgrade({ userPlan }: { userPlan: UserPlan }) {
             type="button"
             disabled={loading}
             className="bg-cyan-500 font-semibold text-black hover:bg-cyan-400"
-            onClick={() => void startCheckout()}
+            onClick={() => void handleCheckout()}
           >
             {loading ? "Redirecting…" : "Upgrade to Pro"}
           </Button>

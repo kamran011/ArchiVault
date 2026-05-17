@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
+import { startCheckout as startPaddleCheckout } from "@/lib/billing/checkout";
 
 const EXAMPLE_SCAFFOLD = `Build a CoursePlatform using Volatility-Based Decomposition architecture.
 
@@ -55,18 +56,12 @@ export function ScaffoldPromptUpgrade() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  async function startCheckout() {
+  async function handleCheckout() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "blueprint" }),
-      });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Checkout failed");
-      if (data.url) window.location.href = data.url;
+      const url = await startPaddleCheckout("blueprint");
+      window.location.href = url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout failed");
     } finally {
@@ -98,7 +93,7 @@ export function ScaffoldPromptUpgrade() {
             type="button"
             disabled={loading}
             className="bg-cyan-500 font-semibold text-black hover:bg-cyan-400"
-            onClick={() => void startCheckout()}
+            onClick={() => void handleCheckout()}
           >
             {loading ? "Redirecting…" : "Unlock scaffold prompt"}
           </Button>

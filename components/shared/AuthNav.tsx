@@ -33,7 +33,7 @@ export function AuthNav({ variant = "landing" }: AuthNavProps) {
 
   if (isSignedIn) {
     return (
-      <>
+      <div className={cn("flex items-center", variant === "landing" ? "gap-3" : "gap-2 sm:gap-3")}>
         <Link
           href="/dashboard"
           className={
@@ -54,13 +54,13 @@ export function AuthNav({ variant = "landing" }: AuthNavProps) {
             },
           }}
         />
-      </>
+      </div>
     )
   }
 
   if (variant === "landing") {
     return (
-      <>
+      <div className="flex items-center gap-3">
         <Link
           href="/sign-in"
           className="px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -73,12 +73,12 @@ export function AuthNav({ variant = "landing" }: AuthNavProps) {
         >
           Get started
         </Link>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
+    <div className="flex items-center gap-2 sm:gap-3">
       <SignInButton mode="modal">
         <button
           type="button"
@@ -101,6 +101,6 @@ export function AuthNav({ variant = "landing" }: AuthNavProps) {
           Get started
         </button>
       </SignUpButton>
-    </>
+    </div>
   )
 }

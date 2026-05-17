@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { BrandWordmark } from "@/components/brand/BrandWordmark"
+import { SupportEmailLink } from "@/components/shared/SupportEmailLink"
 export function LegalPageLayout({
   title,
   lastUpdated,
@@ -23,9 +24,7 @@ export function LegalPageLayout({
         <div className="mt-10 space-y-6 text-sm leading-relaxed text-foreground/85">{children}</div>
         <p className="mt-12 border-t border-border pt-8 text-xs text-muted-foreground">
           Questions? Contact{" "}
-          <a href="mailto:support@archivolt.dev" className="text-cyan-500 hover:underline">
-            support@archivolt.dev
-          </a>
+          <SupportEmailLink showAddress linkClassName="text-cyan-500 hover:underline" />
           . This page is general information, not legal advice.
         </p>
         <p className="mt-4 flex flex-wrap gap-4 text-sm">
@@ -40,6 +39,9 @@ export function LegalPageLayout({
           </Link>
           <Link href="/refund" className="text-muted-foreground hover:text-foreground">
             Refunds
+          </Link>
+          <Link href="/contact" className="text-muted-foreground hover:text-foreground">
+            Contact
           </Link>
         </p>
       </main>

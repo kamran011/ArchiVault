@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -24,8 +24,7 @@ import {
 import type { GenerationLimitUi } from "@/lib/plans";
 import type { UserPlan } from "@/lib/plan-gate";
 import type { PromptPayload } from "./types";
-import { PricingCtaLink } from "@/components/shared/PricingCtaLink";
-import { FreeGenerationLimitCard } from "./FreeGenerationLimitCard";
+import { GenerationLimitUpgrade } from "./GenerationLimitUpgrade";
 
 type PromptInputProps = {
   disabled: boolean;
@@ -59,21 +58,11 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
     const submitDisabled =
       generationLimitReached || disabled || description.trim().length < 10;
 
-    if (generationLimitReached && userPlan === "free" && generationLimitUi) {
+    if (generationLimitReached && generationLimitUi && (userPlan === "free" || userPlan === "blueprint")) {
       return (
         <div className="w-full">
-          {/* Keeps forwardRef typings; parent focus/scroll targets this inert field */}
-          <textarea
-            ref={ref}
-            readOnly
-            tabIndex={-1}
-            className="sr-only"
-            aria-hidden
-          />
-          <FreeGenerationLimitCard
-            planLabel={generationLimitUi.planLabel}
-            usageHint={generationLimitUi.usageHint}
-          />
+          <textarea ref={ref} readOnly tabIndex={-1} className="sr-only" aria-hidden />
+          <GenerationLimitUpgrade userPlan={userPlan} limitUi={generationLimitUi} />
         </div>
       );
     }
@@ -84,23 +73,6 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
           <Label htmlFor="desc" className="text-sm font-medium text-foreground/90">
             Describe the system you want to build
           </Label>
-          {generationLimitReached && generationLimitUi ? (
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2">
-              <p className="text-xs text-zinc-500">
-                {generationLimitUi.planLabel} plan · {generationLimitUi.usageHint}
-              </p>
-              <PricingCtaLink
-                href={generationLimitUi.ctaHref}
-                className={cn(
-                  buttonVariants({ size: "default" }),
-                  ctaButtonClass,
-                  "inline-flex w-full shrink-0 rounded-lg font-semibold sm:w-auto sm:min-w-[140px]",
-                )}
-              >
-                {generationLimitUi.ctaLabel}
-              </PricingCtaLink>
-            </div>
-          ) : null}
           <Textarea
             ref={ref}
             id="desc"

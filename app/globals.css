@@ -21,6 +21,42 @@
   .hero-title {
     letter-spacing: -0.03em;
   }
+
+  .landing-cta {
+    @apply transition-all duration-200 ease-out motion-reduce:transition-none;
+  }
+
+  .landing-cta:hover {
+    @apply scale-[1.02] shadow-lg motion-reduce:scale-100 motion-reduce:shadow-none;
+  }
+
+  .landing-cta:active {
+    @apply scale-[0.98] motion-reduce:scale-100;
+  }
+
+  .landing-cta-primary:hover {
+    @apply shadow-cyan-500/25;
+  }
+
+  .landing-cta-secondary:hover {
+    @apply shadow-black/20;
+  }
+
+  .landing-card-hover {
+    @apply transition-all duration-300 ease-out motion-reduce:transition-none;
+  }
+
+  .landing-card-hover:hover {
+    @apply scale-[1.01] shadow-lg shadow-black/15 motion-reduce:scale-100;
+  }
+
+  .landing-pricing-card {
+    @apply transition-all duration-300 ease-out motion-reduce:transition-none;
+  }
+
+  .landing-pricing-card:hover {
+    @apply border-cyan-500/50 shadow-lg shadow-cyan-500/10 motion-reduce:shadow-none;
+  }
 }
 
 @layer base {
@@ -156,8 +192,22 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-in {
+  .animate-in,
+  .animate-fade-in-up,
+  .animate-pulse-glow,
+  .animate-fade-in,
+  .animate-popular-badge {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .landing-cta:hover,
+  .landing-cta:active,
+  .landing-card-hover:hover,
+  .landing-pricing-card:hover {
+    transform: none !important;
+    box-shadow: none !important;
   }
 }

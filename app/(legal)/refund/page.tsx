@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { LegalPageLayout } from "@/components/legal/LegalPageLayout"
+import { SupportEmailLink } from "@/components/shared/SupportEmailLink"
 
 export const metadata: Metadata = {
   title: "Refund Policy | Archivolt",
@@ -14,10 +15,7 @@ export default function RefundPage() {
         <p>
           For paid <strong>Blueprint</strong> (one-time), <strong>Pro</strong>, and <strong>Team</strong> purchases, you
           may request a full refund within <strong>30 days</strong> of the charge if you are not satisfied. Contact us at{" "}
-          <a href="mailto:support@archivolt.dev" className="text-cyan-500 hover:underline">
-            support@archivolt.dev
-          </a>{" "}
-          with your account email and approximate purchase date. We will confirm eligibility and process approved refunds
+          <SupportEmailLink showAddress linkClassName="text-cyan-500 hover:underline" /> with your account email and approximate purchase date. We will confirm eligibility and process approved refunds
           to the original payment method where possible.
         </p>
       </section>
@@ -25,10 +23,10 @@ export default function RefundPage() {
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">Subscriptions</h2>
         <p>
-          <strong>Pro</strong> and <strong>Team</strong> are subscriptions. You may cancel at any time from your billing
-          portal (Stripe Customer
-          Portal) or by contacting support. Cancellation stops future renewals; you generally retain access until the end of
-          the current billing period unless we agree otherwise.
+          <strong>Pro</strong> and <strong>Team</strong> are subscriptions. You may cancel at any time from the
+          Architecture studio sidebar (<strong>Cancel subscription</strong>) or by contacting support. Cancellation
+          stops future renewals; you generally retain access until the end of the current billing period unless we agree
+          otherwise.
         </p>
       </section>
 

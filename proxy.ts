@@ -8,9 +8,11 @@ const isPublicRoute = createRouteMatcher([
   "/privacy(.*)",
   "/terms(.*)",
   "/refund(.*)",
-  "/api/stripe/webhook(.*)",
+  "/contact(.*)",
+  "/api/paddle/webhook(.*)",
   "/api/clerk/webhook(.*)",
   "/api/webhooks/clerk(.*)",
+  "/api/waitlist",
 ])
 
 const isProduction = process.env.NODE_ENV === "production"

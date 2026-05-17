@@ -33,6 +33,8 @@ export function DashboardApp() {
   const [error, setError] = React.useState<string | null>(null);
   const [userPlan, setUserPlan] = React.useState<UserPlan>("free");
   const [generationCount, setGenerationCount] = React.useState(0);
+  const [subscriptionStatus, setSubscriptionStatus] = React.useState<string | null>(null);
+  const [subscriptionCancelsAt, setSubscriptionCancelsAt] = React.useState<string | null>(null);
   const [techStack, setTechStack] = React.useState("Any");
   const [pendingDelete, setPendingDelete] = React.useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = React.useState(false);
@@ -49,6 +51,12 @@ export function DashboardApp() {
         }
         if (typeof body?.generationCount === "number") {
           setGenerationCount(body.generationCount);
+        }
+        if ("subscriptionStatus" in body) {
+          setSubscriptionStatus((body.subscriptionStatus as string | null) ?? null);
+        }
+        if ("subscriptionCancelsAt" in body) {
+          setSubscriptionCancelsAt((body.subscriptionCancelsAt as string | null) ?? null);
         }
       }
     } catch {
@@ -253,6 +261,9 @@ export function DashboardApp() {
     loading: loadingHistory,
     activeId: activeGenId,
     userPlan,
+    subscriptionStatus,
+    subscriptionCancelsAt,
+    onPlanRefresh: () => void loadPlan(),
     onNew: handleNewArchitecture,
     onSelect: loadGeneration,
     onDelete: requestDelete,
@@ -262,7 +273,8 @@ export function DashboardApp() {
 
   const generationLimitReached = isGenerationLimitReached(userPlan, generationCount);
   const limitUx = generationLimitReached ? generationLimitUi(userPlan) : null;
-  const showFreeLimitUpsell = generationLimitReached && userPlan === "free" && limitUx;
+  const showGenerationLimitUpsell =
+    generationLimitReached && limitUx && (userPlan === "free" || userPlan === "blueprint");
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-background">
@@ -336,8 +348,14 @@ export function DashboardApp() {
           <div className="min-h-0 flex-1 overflow-y-auto py-6">
             <div className={cn(studioColumnClass, "space-y-8")}>
               {isCreateMode ? (
-                showFreeLimitUpsell ? (
-                  <div className="flex min-h-[min(60vh,560px)] flex-col justify-center py-8">
+                showGenerationLimitUpsell ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-lg font-semibold text-foreground">System brief</h2>
+                      <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                        You have used all generations on your current plan.
+                      </p>
+                    </div>
                     <PromptInput
                       ref={promptRef}
                       disabled={generating}

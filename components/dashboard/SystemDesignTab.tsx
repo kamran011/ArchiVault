@@ -2,8 +2,6 @@
 
 import { useState } from "react"
 import type { Architecture, PatternRecommendation, SystemDesign } from "@/types/architecture"
-import type { UserPlan } from "@/lib/plan-gate"
-import { canAccessSystemDesign } from "@/lib/plan-gate"
 import {
   accentHighlightClass,
   accentIconClass,
@@ -19,14 +17,12 @@ import {
   sdRiskCalloutTitleClass,
 } from "@/lib/theme-badges"
 import { cn } from "@/lib/utils"
-import { PricingCtaLink } from "@/components/shared/PricingCtaLink"
 import {
   Loader2,
   AlertTriangle,
   CheckCircle,
   Info,
   Zap,
-  Lock,
 } from "lucide-react"
 
 const PRIORITY_CONFIG = {
@@ -70,14 +66,12 @@ function LoadingSkeleton() {
 interface SystemDesignTabProps {
   architecture: Architecture
   generationId: string | null
-  userPlan: UserPlan
   onSystemDesignUpdate?: (systemDesign: SystemDesign) => void
 }
 
 export function SystemDesignTab({
   architecture,
   generationId,
-  userPlan,
   onSystemDesignUpdate,
 }: SystemDesignTabProps) {
   const [loading, setLoading] = useState(false)
@@ -86,56 +80,6 @@ export function SystemDesignTab({
     architecture.systemDesign ?? null,
   )
   const [activeCategory, setActiveCategory] = useState<string>("all")
-
-  if (!canAccessSystemDesign(userPlan)) {
-    return (
-      <div className="flex flex-col items-center justify-center px-6 py-16">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-card">
-          <Lock className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <h3 className="mb-2 text-lg font-semibold text-foreground">System Design is a Team feature</h3>
-        <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-          Get pattern-by-pattern recommendations for your architecture — circuit breakers, message
-          queues, caching strategies, and more. Based on 50 proven system design patterns.
-        </p>
-
-        <div className="relative w-full max-w-2xl overflow-hidden rounded-xl">
-          <div className="pointer-events-none select-none opacity-60 blur-sm">
-            <div className="mb-3 rounded-xl border border-border bg-card p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <span className={cn("font-mono text-sm font-bold", accentHighlightClass)}>IPaymentProcessor</span>
-                <span className={cn("rounded-full border px-2 py-0.5 text-xs", sdPriorityBadgeClass.mandatory)}>
-                  MANDATORY
-                </span>
-              </div>
-              <div className="space-y-2">
-                <div className="rounded-lg bg-muted p-3">
-                  <p className="mb-1 text-xs font-semibold text-muted-foreground">Circuit Breaker</p>
-                  <p className="text-xs text-muted-foreground">
-                    Stripe outages are inevitable. Without a circuit breaker...
-                  </p>
-                </div>
-                <div className="rounded-lg bg-muted p-3">
-                  <p className="mb-1 text-xs font-semibold text-muted-foreground">Idempotency</p>
-                  <p className="text-xs text-muted-foreground">
-                    Payment retries must never double-charge customers...
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-background via-background/80 to-transparent pb-6">
-            <PricingCtaLink
-              href="/#pricing"
-              className="rounded-xl bg-cyan-500 px-6 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-cyan-400"
-            >
-              Upgrade to Team — $79/mo
-            </PricingCtaLink>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   async function handleGenerate() {
     setLoading(true)

@@ -4,10 +4,14 @@ import Link from "next/link"
 import { AuthNav } from "@/components/shared/AuthNav"
 import { BrandWordmark } from "@/components/brand/BrandWordmark"
 import { ExampleOutputSection } from "@/components/landing/ExampleOutputSection"
+import { ItsThatSimpleSection } from "@/components/landing/ItsThatSimpleSection"
+import { WhoIsArchivoltForSection } from "@/components/landing/WhoIsArchivoltForSection"
 import { FaqSection } from "@/components/landing/FaqSection"
 import { PricingSection } from "@/components/landing/PricingSection"
 import { ScrollPricingIntoViewOnMount } from "@/components/shared/PricingCtaLink"
 import { SiteFooter } from "@/components/shared/SiteFooter"
+import { siteContainerClass, siteGutterClass } from "@/lib/site-layout"
+import { cn } from "@/lib/utils"
 
 export default function Home() {
   return (
@@ -15,16 +19,18 @@ export default function Home() {
       <ScrollPricingIntoViewOnMount />
       {/* NAVBAR */}
       <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <BrandWordmark textClassName="text-lg" logoSize={28} />
-          <AuthNav variant="landing" />
+        <div className={siteGutterClass}>
+          <div className={cn(siteContainerClass, "flex h-16 items-center justify-between")}>
+            <BrandWordmark textClassName="text-lg" logoSize={28} />
+            <AuthNav variant="landing" />
+          </div>
         </div>
       </nav>
 
       {/* HERO */}
       <section className="px-6 pb-24 pt-32">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-400">
+        <div className="mx-auto max-w-4xl animate-fade-in-up text-center motion-reduce:animate-none">
+          <div className="mb-8 inline-flex animate-pulse-glow items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-400 motion-reduce:animate-none">
             <span className="text-purple-400">✦</span>
             <span>Powered by Claude · VBD methodology</span>
           </div>
@@ -41,7 +47,7 @@ export default function Home() {
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Link
               href="/sign-up"
-              className="rounded-xl bg-cyan-500 px-8 py-3.5 text-base font-semibold text-black transition-colors hover:bg-cyan-400"
+              className="landing-cta landing-cta-primary rounded-xl bg-cyan-500 px-8 py-3.5 text-base font-semibold text-black hover:bg-cyan-400"
             >
               Generate free architecture
             </Link>
@@ -50,7 +56,7 @@ export default function Home() {
               onClick={() =>
                 document.getElementById("example")?.scrollIntoView({ behavior: "smooth" })
               }
-              className="rounded-xl border border-border px-8 py-3.5 text-base text-foreground/80 transition-colors hover:border-zinc-500"
+              className="landing-cta landing-cta-secondary rounded-xl border border-border px-8 py-3.5 text-base text-foreground/80 hover:border-zinc-500"
             >
               See example output
             </button>
@@ -60,6 +66,8 @@ export default function Home() {
           </p>
         </div>
       </section>
+
+      <WhoIsArchivoltForSection />
 
       {/* HOW IT WORKS */}
       <section className="border-t border-border/50 px-6 py-24">
@@ -96,6 +104,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <ItsThatSimpleSection />
 
       <ExampleOutputSection />
 

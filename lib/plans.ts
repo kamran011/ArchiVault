@@ -8,12 +8,16 @@ export type PricingTier = {
   price: string
   priceSuffix?: string
   badge?: string
+  /** Shown when checkout is not live yet (e.g. "Coming Soon"). */
+  statusBadge?: string
+  launchSubtext?: string
   description: string
   features: string[]
   checkoutPlan: CheckoutPlan | null
   cta: string
   href: string | null
   highlighted?: boolean
+  comingSoon?: boolean
 }
 
 export const PRICING_TIERS: PricingTier[] = [
@@ -21,6 +25,7 @@ export const PRICING_TIERS: PricingTier[] = [
     id: "free",
     name: "Free",
     price: "$0",
+    badge: "BEST FOR MVP",
     description: "Validate the methodology on one real system.",
     features: [
       "1 architecture generation",
@@ -36,49 +41,58 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Blueprint",
     price: "$49",
     priceSuffix: " once",
-    badge: "BEST FOR MVP",
+    badge: "BEST FOR BUILDERS",
+    statusBadge: "Coming Soon",
+    launchSubtext: "Payment processing launching this week",
     description: "Ship one product without a monthly subscription.",
     features: [
       "4 total generations (includes your free one)",
       "PDF export + saved history",
-      "Full scaffold prompt for leading AI coding agents",
+      "Full scaffold prompt for AI coding agents",
     ],
     checkoutPlan: "blueprint",
-    cta: "Buy Blueprint",
+    cta: "Join Waitlist",
     href: null,
-    highlighted: true,
+    comingSoon: true,
   },
   {
     id: "pro",
     name: "Pro",
     price: "$29",
     priceSuffix: "/mo",
-    description: "For builders iterating on features or multiple products.",
+    badge: "MOST POPULAR",
+    statusBadge: "Coming Soon",
+    launchSubtext: "Payment processing launching this week",
+    description: "For teams iterating on multiple products.",
     features: [
       "Unlimited generations (fair use)",
       "Everything in Blueprint",
       "Tech stack analysis tab",
-      "Priority model updates",
     ],
     checkoutPlan: "pro",
-    cta: "Subscribe to Pro",
+    cta: "Join Waitlist",
     href: null,
+    highlighted: true,
+    comingSoon: true,
   },
   {
     id: "team",
     name: "Team",
-    price: "$79",
+    price: "$49",
     priceSuffix: "/mo",
+    badge: "FOR TEAMS",
+    statusBadge: "Coming Soon",
+    launchSubtext: "Payment processing launching this week",
     description: "For design reviews, agencies, and shared standards.",
     features: [
       "Everything in Pro",
       "System Design tab (patterns + risks)",
       "Scaling & data-flow summary",
-      "Priority support",
     ],
     checkoutPlan: "team",
-    cta: "Subscribe to Team",
+    cta: "Join Waitlist",
     href: null,
+    comingSoon: true,
   },
 ]
 

@@ -11,6 +11,12 @@ import { nextUpgradePlan, type CheckoutPlan } from "@/lib/plans";
 import { BrandWordmark } from "@/components/brand/BrandWordmark";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Architecture } from "@/types/architecture";
+import { upgradeButtonClass } from "@/lib/theme-badges";
+import { startCheckout } from "@/lib/billing/checkout";
+import { formatSubscriptionCancelDate, planDisplayName } from "@/lib/format-subscription-date";
+import { toast } from "sonner";
+import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
+
 export type GenerationRow = {
   id: string;
   description: string;
@@ -24,9 +30,12 @@ type DashboardSidebarProps = {
   loading: boolean;
   activeId: string | null;
   userPlan: UserPlan;
+  subscriptionStatus: string | null;
+  subscriptionCancelsAt: string | null;
   onNew: () => void;
   onSelect: (row: GenerationRow) => void;
   onDelete: (id: string, name: string) => void;
+  onPlanRefresh: () => void;
 };
 
 function previewDescription(description: string) {
@@ -34,36 +43,33 @@ function previewDescription(description: string) {
   return `${description.slice(0, 50)}…`;
 }
 
-import { upgradeButtonClass } from "@/lib/theme-badges";
-
 export function DashboardSidebar({
   generations,
   loading,
   activeId,
   userPlan,
+  subscriptionStatus,
+  subscriptionCancelsAt,
   onNew,
   onSelect,
   onDelete,
+  onPlanRefresh,
 }: DashboardSidebarProps) {
   const { user } = useUser();
   const [upgrading, setUpgrading] = React.useState(false);
+  const [cancelOpen, setCancelOpen] = React.useState(false);
+  const [canceling, setCanceling] = React.useState(false);
 
   const displayName =
     user?.firstName ||
     user?.primaryEmailAddress?.emailAddress?.split("@")[0] ||
     "Account";
 
-  async function startCheckout(plan: CheckoutPlan) {
+  async function handleCheckout(plan: CheckoutPlan) {
     setUpgrading(true);
     try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Checkout failed");
-      if (data.url) window.location.href = data.url;
+      const url = await startCheckout(plan);
+      window.location.href = url;
     } catch {
       // Checkout errors surface on retry; keep sidebar uncluttered
     } finally {
@@ -71,7 +77,27 @@ export function DashboardSidebar({
     }
   }
 
+  async function handleCancelConfirm() {
+    setCanceling(true);
+    try {
+      const res = await fetch("/api/paddle/cancel-subscription", { method: "POST" });
+      const data = (await res.json()) as { error?: string; message?: string; cancelsAt?: string }
+      if (!res.ok) throw new Error(data.error ?? "Could not cancel subscription");
+      toast.success("Subscription scheduled to cancel");
+      setCancelOpen(false);
+      onPlanRefresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not cancel subscription");
+    } finally {
+      setCanceling(false);
+    }
+  }
+
   const upgradePlan = nextUpgradePlan(userPlan);
+  const isSubscribed = userPlan === "pro" || userPlan === "team";
+  const isScheduledCancel = subscriptionStatus === "scheduled_cancellation";
+  const showCancelButton = isSubscribed && !isScheduledCancel;
+  const cancelDateLabel = formatSubscriptionCancelDate(subscriptionCancelsAt);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -150,6 +176,13 @@ export function DashboardSidebar({
       </div>
 
       <div className="border-t border-zinc-800 p-3">
+        {isScheduledCancel && subscriptionCancelsAt ? (
+          <p className="mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
+            Your subscription cancels on <strong>{cancelDateLabel}</strong>. You have{" "}
+            <strong>{planDisplayName(userPlan)}</strong> access until then.
+          </p>
+        ) : null}
+
         <div className="flex items-center justify-between gap-2 px-2 py-2">
           <div className="flex min-w-0 items-center gap-2">
             <UserButton
@@ -166,22 +199,41 @@ export function DashboardSidebar({
           </div>
           <div className="flex shrink-0 items-center">
             {upgradePlan ? (
-            <button
-              type="button"
-              disabled={upgrading}
-              onClick={() => void startCheckout(upgradePlan)}
-              className={upgradeButtonClass}
-            >
-              {upgrading ? "…" : "Upgrade"}
-            </button>
-          ) : (
-            <PricingCtaLink href="/#pricing" className={upgradeButtonClass}>
-              Plans
-            </PricingCtaLink>
-          )}
+              <button
+                type="button"
+                disabled={upgrading}
+                onClick={() => void handleCheckout(upgradePlan)}
+                className={upgradeButtonClass}
+              >
+                {upgrading ? "…" : "Upgrade"}
+              </button>
+            ) : (
+              <PricingCtaLink href="/#pricing" className={upgradeButtonClass}>
+                Plans
+              </PricingCtaLink>
+            )}
           </div>
         </div>
+
+        {showCancelButton ? (
+          <button
+            type="button"
+            className="mt-1 w-full px-2 py-1.5 text-left text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            onClick={() => setCancelOpen(true)}
+          >
+            Cancel subscription
+          </button>
+        ) : null}
       </div>
+
+      <CancelSubscriptionDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        userPlan={userPlan}
+        subscriptionCancelsAt={subscriptionCancelsAt}
+        onConfirm={handleCancelConfirm}
+        confirming={canceling}
+      />
     </div>
   );
 }
