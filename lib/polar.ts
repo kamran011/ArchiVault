@@ -5,7 +5,7 @@ import { Polar } from "@polar-sh/sdk"
 export type PolarServer = "sandbox" | "production"
 
 /** Local `next dev` uses dev Polar config; production builds use prod config. */
-export function usePolarDevConfig(): boolean {
+export function isPolarDevRuntime(): boolean {
   return process.env.NODE_ENV !== "production"
 }
 
@@ -15,7 +15,7 @@ function parsePolarServer(value: string | undefined): PolarServer {
 }
 
 export function getPolarServer(): PolarServer {
-  if (usePolarDevConfig()) {
+  if (isPolarDevRuntime()) {
     return parsePolarServer(
       process.env.POLAR_SERVER_DEV ?? process.env.POLAR_SERVER,
     )
@@ -26,7 +26,7 @@ export function getPolarServer(): PolarServer {
 }
 
 export function getPolarAccessToken(): string | undefined {
-  if (usePolarDevConfig()) {
+  if (isPolarDevRuntime()) {
     return (
       process.env.POLAR_ACCESS_TOKEN_DEV?.trim() ||
       process.env.POLAR_ACCESS_TOKEN?.trim()
@@ -39,7 +39,7 @@ export function getPolarAccessToken(): string | undefined {
 }
 
 export function getPolarWebhookSecret(): string | undefined {
-  if (usePolarDevConfig()) {
+  if (isPolarDevRuntime()) {
     const secret =
       process.env.POLAR_WEBHOOK_SECRET_DEV?.trim() ||
       process.env.POLAR_WEBHOOK_SECRET?.trim()
@@ -59,7 +59,7 @@ export function getPolarWebhookSecret(): string | undefined {
 export function createPolarClient(): Polar {
   const accessToken = getPolarAccessToken()
   if (!accessToken) {
-    const hint = usePolarDevConfig()
+    const hint = isPolarDevRuntime()
       ? "POLAR_ACCESS_TOKEN_DEV"
       : "POLAR_ACCESS_TOKEN_PROD"
     throw new Error(`${hint} is not configured`)
