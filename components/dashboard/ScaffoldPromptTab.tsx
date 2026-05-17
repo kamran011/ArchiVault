@@ -12,6 +12,7 @@ interface ScaffoldPromptTabProps {
   techStack: string
   generationId: string | null
   onScaffoldUpdate?: (scaffoldPrompt: string) => void
+  onGeneratingChange?: (generating: boolean) => void
 }
 
 export function ScaffoldPromptTab({
@@ -19,6 +20,7 @@ export function ScaffoldPromptTab({
   techStack,
   generationId,
   onScaffoldUpdate,
+  onGeneratingChange,
 }: ScaffoldPromptTabProps) {
   const [building, setBuilding] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,6 +32,7 @@ export function ScaffoldPromptTab({
 
   async function handleGenerate() {
     setBuilding(true)
+    onGeneratingChange?.(true)
     setError(null)
     try {
       const prompt = buildScaffoldPrompt(architecture, techStack)
@@ -51,6 +54,7 @@ export function ScaffoldPromptTab({
       setError(e instanceof Error ? e.message : "Something went wrong")
     } finally {
       setBuilding(false)
+      onGeneratingChange?.(false)
     }
   }
 

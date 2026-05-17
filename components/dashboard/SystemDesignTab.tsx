@@ -67,12 +67,14 @@ interface SystemDesignTabProps {
   architecture: Architecture
   generationId: string | null
   onSystemDesignUpdate?: (systemDesign: SystemDesign) => void
+  onGeneratingChange?: (generating: boolean) => void
 }
 
 export function SystemDesignTab({
   architecture,
   generationId,
   onSystemDesignUpdate,
+  onGeneratingChange,
 }: SystemDesignTabProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -83,6 +85,7 @@ export function SystemDesignTab({
 
   async function handleGenerate() {
     setLoading(true)
+    onGeneratingChange?.(true)
     setError(null)
     try {
       const res = await fetch("/api/generate-system-design", {
@@ -101,6 +104,7 @@ export function SystemDesignTab({
       setError(e instanceof Error ? e.message : "Something went wrong")
     } finally {
       setLoading(false)
+      onGeneratingChange?.(false)
     }
   }
 

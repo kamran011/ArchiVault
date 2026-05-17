@@ -34,8 +34,6 @@ export function DashboardApp() {
   const [error, setError] = React.useState<string | null>(null);
   const [userPlan, setUserPlan] = React.useState<UserPlan>("free");
   const [generationCount, setGenerationCount] = React.useState(0);
-  const [subscriptionStatus, setSubscriptionStatus] = React.useState<string | null>(null);
-  const [subscriptionCancelsAt, setSubscriptionCancelsAt] = React.useState<string | null>(null);
   const [techStack, setTechStack] = React.useState("Any");
   const [pendingDelete, setPendingDelete] = React.useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = React.useState(false);
@@ -60,12 +58,6 @@ export function DashboardApp() {
         }
         if (typeof body?.generationCount === "number") {
           setGenerationCount(body.generationCount);
-        }
-        if ("subscriptionStatus" in body) {
-          setSubscriptionStatus((body.subscriptionStatus as string | null) ?? null);
-        }
-        if ("subscriptionCancelsAt" in body) {
-          setSubscriptionCancelsAt((body.subscriptionCancelsAt as string | null) ?? null);
         }
       }
     } catch {
@@ -270,9 +262,6 @@ export function DashboardApp() {
     loading: loadingHistory,
     activeId: activeGenId,
     userPlan,
-    subscriptionStatus,
-    subscriptionCancelsAt,
-    onPlanRefresh: () => void loadPlan(),
     onNew: handleNewArchitecture,
     onSelect: loadGeneration,
     onDelete: requestDelete,

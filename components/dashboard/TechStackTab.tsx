@@ -75,6 +75,7 @@ interface TechStackTabProps {
   generationId: string | null
   techStack?: string
   onTechStackUpdate?: (techStackAnalysis: TechStackAnalysis) => void
+  onGeneratingChange?: (generating: boolean) => void
 }
 
 export function TechStackTab({
@@ -82,6 +83,7 @@ export function TechStackTab({
   generationId,
   techStack = "Any",
   onTechStackUpdate,
+  onGeneratingChange,
 }: TechStackTabProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -91,6 +93,7 @@ export function TechStackTab({
 
   async function handleGenerate() {
     setLoading(true)
+    onGeneratingChange?.(true)
     setError(null)
     try {
       const res = await fetch("/api/generate-tech-stack", {
@@ -107,6 +110,7 @@ export function TechStackTab({
       setError(e instanceof Error ? e.message : "Something went wrong")
     } finally {
       setLoading(false)
+      onGeneratingChange?.(false)
     }
   }
 

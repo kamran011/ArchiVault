@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import type { Architecture, SystemDesign, TechStackAnalysis } from "@/types/architecture";
 import type { UserPlan } from "@/lib/plan-gate";
 import {
@@ -36,6 +37,7 @@ import { SystemDesignUpgrade } from "./SystemDesignUpgrade";
 import { ScaffoldPromptTab } from "./ScaffoldPromptTab";
 import { TechStackTab } from "./TechStackTab";
 import { TechStackUpgrade } from "./TechStackUpgrade";
+import { TabGeneratingIndicator } from "./TabGeneratingIndicator";
 
 export function ArchitectureOutput({
   data,
@@ -60,6 +62,16 @@ export function ArchitectureOutput({
   const hasTechStackAccess = canAccessTechStack(userPlan);
   const hasTeamAccess = canAccessSystemDesign(userPlan);
   const canPdf = canExportPdf(userPlan);
+
+  const [isGeneratingTechStack, setIsGeneratingTechStack] = React.useState(false);
+  const [isGeneratingScaffoldPrompt, setIsGeneratingScaffoldPrompt] = React.useState(false);
+  const [isGeneratingSystemDesign, setIsGeneratingSystemDesign] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsGeneratingTechStack(false);
+    setIsGeneratingScaffoldPrompt(false);
+    setIsGeneratingSystemDesign(false);
+  }, [generationId]);
 
   const tabTriggerClass = cn(
     "shrink-0 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors",
@@ -96,23 +108,38 @@ export function ArchitectureOutput({
           <TabsTrigger value="roadmap" className={tabTriggerClass}>
             Build order
           </TabsTrigger>
-          <TabsTrigger value="techstack" className={cn(tabTriggerClass, "gap-1.5")}>
+          <TabsTrigger
+            value="techstack"
+            className={cn(tabTriggerClass, "gap-1.5")}
+            aria-busy={isGeneratingTechStack}
+          >
             {!hasTechStackAccess ? <Lock className="size-3.5 shrink-0 opacity-70" aria-hidden /> : null}
             Tech Stack
+            {isGeneratingTechStack ? <TabGeneratingIndicator /> : null}
             {!hasTechStackAccess ? (
               <Badge className={proTabBadgeClass}>Pro</Badge>
             ) : null}
           </TabsTrigger>
-          <TabsTrigger value="scaffold" className={cn(tabTriggerClass, "gap-1.5")}>
+          <TabsTrigger
+            value="scaffold"
+            className={cn(tabTriggerClass, "gap-1.5")}
+            aria-busy={isGeneratingScaffoldPrompt}
+          >
             {!hasScaffoldAccess ? <Lock className="size-3.5 shrink-0 opacity-70" aria-hidden /> : null}
             Scaffold prompt
+            {isGeneratingScaffoldPrompt ? <TabGeneratingIndicator /> : null}
             {!hasScaffoldAccess ? (
               <Badge className={blueprintTabBadgeClass}>Blueprint</Badge>
             ) : null}
           </TabsTrigger>
-          <TabsTrigger value="systemdesign" className={cn(tabTriggerClass, "gap-1.5")}>
+          <TabsTrigger
+            value="systemdesign"
+            className={cn(tabTriggerClass, "gap-1.5")}
+            aria-busy={isGeneratingSystemDesign}
+          >
             {!hasTeamAccess ? <Lock className="size-3.5 shrink-0 opacity-70" aria-hidden /> : null}
             System Design
+            {isGeneratingSystemDesign ? <TabGeneratingIndicator /> : null}
             {!hasTeamAccess ? (
               <Badge className={teamTabBadgeClass}>
                 Team
@@ -232,7 +259,7 @@ export function ArchitectureOutput({
           </div>
         </TabsContent>
 
-        <TabsContent value="techstack" className="mt-4 w-full outline-none">
+        <TabsContent value="techstack" keepMounted className="mt-4 w-full outline-none data-[hidden]:hidden">
           {!hasTechStackAccess ? (
             <TechStackUpgrade userPlan={userPlan} />
           ) : (
@@ -242,11 +269,12 @@ export function ArchitectureOutput({
               generationId={generationId}
               techStack={techStack}
               onTechStackUpdate={onTechStackUpdate}
+              onGeneratingChange={setIsGeneratingTechStack}
             />
           )}
         </TabsContent>
 
-        <TabsContent value="scaffold" className="mt-4 w-full outline-none">
+        <TabsContent value="scaffold" keepMounted className="mt-4 w-full outline-none data-[hidden]:hidden">
           {!hasScaffoldAccess ? (
             <ScaffoldPromptUpgrade />
           ) : (
@@ -256,11 +284,12 @@ export function ArchitectureOutput({
               techStack={techStack}
               generationId={generationId}
               onScaffoldUpdate={onScaffoldUpdate}
+              onGeneratingChange={setIsGeneratingScaffoldPrompt}
             />
           )}
         </TabsContent>
 
-        <TabsContent value="systemdesign" className="mt-4 w-full outline-none">
+        <TabsContent value="systemdesign" keepMounted className="mt-4 w-full outline-none data-[hidden]:hidden">
           {!hasTeamAccess ? (
             <SystemDesignUpgrade />
           ) : (
@@ -269,6 +298,7 @@ export function ArchitectureOutput({
               architecture={data}
               generationId={generationId}
               onSystemDesignUpdate={onSystemDesignUpdate}
+              onGeneratingChange={setIsGeneratingSystemDesign}
             />
           )}
         </TabsContent>

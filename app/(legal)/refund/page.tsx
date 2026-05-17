@@ -24,7 +24,7 @@ export default function RefundPage() {
         <h2 className="text-base font-semibold text-foreground">Subscriptions</h2>
         <p>
           <strong>Pro</strong> and <strong>Team</strong> are subscriptions. You may cancel at any time from the
-          Architecture studio sidebar (<strong>Cancel subscription</strong>) or by contacting support. Cancellation
+          Settings → Billing (<strong>Cancel plan</strong>) or by contacting support. Cancellation
           stops future renewals; you generally retain access until the end of the current billing period unless we agree
           otherwise.
         </p>

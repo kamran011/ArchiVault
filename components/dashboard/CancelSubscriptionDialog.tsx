@@ -1,6 +1,5 @@
-"use client";
+"use client"
 
-import * as React from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,41 +9,58 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { formatSubscriptionCancelDate, planDisplayName } from "@/lib/format-subscription-date";
-import type { UserPlan } from "@/lib/plan-gate";
+} from "@/components/ui/alert-dialog"
+import { formatSubscriptionCancelDate, planDisplayName } from "@/lib/format-subscription-date"
+import type { UserPlan } from "@/lib/plan-gate"
 
 type CancelSubscriptionDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  userPlan: UserPlan;
-  subscriptionCancelsAt: string | null;
-  onConfirm: () => Promise<void>;
-  confirming: boolean;
-};
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  userPlan: UserPlan
+  subscriptionCancelsAt: string | null
+  features: string[]
+  onConfirm: () => Promise<void>
+  confirming: boolean
+}
 
 export function CancelSubscriptionDialog({
   open,
   onOpenChange,
   userPlan,
   subscriptionCancelsAt,
+  features,
   onConfirm,
   confirming,
 }: CancelSubscriptionDialogProps) {
-  const dateLabel = formatSubscriptionCancelDate(subscriptionCancelsAt);
-  const planLabel = planDisplayName(userPlan);
+  const dateLabel = formatSubscriptionCancelDate(subscriptionCancelsAt)
+  const planLabel = planDisplayName(userPlan)
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Cancel subscription?</AlertDialogTitle>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription asChild>
-            <p>
-              Your subscription will cancel at the end of your current billing period (
-              <strong>{dateLabel}</strong>). You&apos;ll keep <strong>{planLabel}</strong> access until
-              then.
-            </p>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                You&apos;ll lose access to your <strong className="text-foreground">{planLabel}</strong>{" "}
+                benefits when your current period ends
+                {subscriptionCancelsAt ? (
+                  <>
+                    {" "}
+                    on <strong className="text-foreground">{dateLabel}</strong>
+                  </>
+                ) : (
+                  <> at the end of your billing period</>
+                )}
+                :
+              </p>
+              <ul className="list-inside list-disc space-y-1 pl-1">
+                {features.map((feature) => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -53,14 +69,14 @@ export function CancelSubscriptionDialog({
             disabled={confirming}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             onClick={(e) => {
-              e.preventDefault();
-              void onConfirm();
+              e.preventDefault()
+              void onConfirm()
             }}
           >
-            {confirming ? "Canceling…" : "Confirm cancellation"}
+            {confirming ? "Canceling…" : "Cancel plan"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

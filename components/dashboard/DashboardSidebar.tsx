@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { PricingCtaLink } from "@/components/shared/PricingCtaLink";
 import { UserButton, useUser } from "@clerk/nextjs";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Settings, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RelativeDate } from "@/components/shared/RelativeDate";
 import type { UserPlan } from "@/lib/plan-gate";
@@ -13,9 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Architecture } from "@/types/architecture";
 import { upgradeButtonClass } from "@/lib/theme-badges";
 import { startCheckout } from "@/lib/billing/checkout";
-import { formatSubscriptionCancelDate, planDisplayName } from "@/lib/format-subscription-date";
-import { toast } from "sonner";
-import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
 import { DevTestCheckoutButton } from "@/components/billing/DevTestCheckoutButton";
 
 export type GenerationRow = {
@@ -31,12 +29,9 @@ type DashboardSidebarProps = {
   loading: boolean;
   activeId: string | null;
   userPlan: UserPlan;
-  subscriptionStatus: string | null;
-  subscriptionCancelsAt: string | null;
   onNew: () => void;
   onSelect: (row: GenerationRow) => void;
   onDelete: (id: string, name: string) => void;
-  onPlanRefresh: () => void;
 };
 
 function previewDescription(description: string) {
@@ -49,17 +44,12 @@ export function DashboardSidebar({
   loading,
   activeId,
   userPlan,
-  subscriptionStatus,
-  subscriptionCancelsAt,
   onNew,
   onSelect,
   onDelete,
-  onPlanRefresh,
 }: DashboardSidebarProps) {
   const { user } = useUser();
   const [upgrading, setUpgrading] = React.useState(false);
-  const [cancelOpen, setCancelOpen] = React.useState(false);
-  const [canceling, setCanceling] = React.useState(false);
 
   const displayName =
     user?.firstName ||
@@ -78,27 +68,7 @@ export function DashboardSidebar({
     }
   }
 
-  async function handleCancelConfirm() {
-    setCanceling(true);
-    try {
-      const res = await fetch("/api/polar/cancel-subscription", { method: "POST" });
-      const data = (await res.json()) as { error?: string; message?: string; cancelsAt?: string }
-      if (!res.ok) throw new Error(data.error ?? "Could not cancel subscription");
-      toast.success("Subscription scheduled to cancel");
-      setCancelOpen(false);
-      onPlanRefresh();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not cancel subscription");
-    } finally {
-      setCanceling(false);
-    }
-  }
-
   const upgradePlan = nextUpgradePlan(userPlan);
-  const isSubscribed = userPlan === "pro" || userPlan === "team";
-  const isScheduledCancel = subscriptionStatus === "scheduled_cancellation";
-  const showCancelButton = isSubscribed && !isScheduledCancel;
-  const cancelDateLabel = formatSubscriptionCancelDate(subscriptionCancelsAt);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -177,13 +147,6 @@ export function DashboardSidebar({
       </div>
 
       <div className="border-t border-zinc-800 p-3">
-        {isScheduledCancel && subscriptionCancelsAt ? (
-          <p className="mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
-            Your subscription cancels on <strong>{cancelDateLabel}</strong>. You have{" "}
-            <strong>{planDisplayName(userPlan)}</strong> access until then.
-          </p>
-        ) : null}
-
         <div className="flex items-center justify-between gap-2 px-2 py-2">
           <div className="flex min-w-0 items-center gap-2">
             <UserButton
@@ -216,15 +179,13 @@ export function DashboardSidebar({
           </div>
         </div>
 
-        {showCancelButton ? (
-          <button
-            type="button"
-            className="mt-1 w-full px-2 py-1.5 text-left text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-            onClick={() => setCancelOpen(true)}
-          >
-            Cancel subscription
-          </button>
-        ) : null}
+        <Link
+          href="/settings/billing"
+          className="mt-2 flex w-full items-center gap-2 rounded-lg px-2 py-2 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+        >
+          <Settings className="size-3.5 shrink-0" aria-hidden />
+          Billing & plan
+        </Link>
 
         <DevTestCheckoutButton
           fullWidth
@@ -232,15 +193,6 @@ export function DashboardSidebar({
           className="mt-2 h-auto border border-dashed border-amber-500/40 py-2 text-xs text-amber-200/90 hover:bg-amber-500/10 hover:text-amber-100"
         />
       </div>
-
-      <CancelSubscriptionDialog
-        open={cancelOpen}
-        onOpenChange={setCancelOpen}
-        userPlan={userPlan}
-        subscriptionCancelsAt={subscriptionCancelsAt}
-        onConfirm={handleCancelConfirm}
-        confirming={canceling}
-      />
     </div>
   );
 }
