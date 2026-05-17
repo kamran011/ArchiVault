@@ -22,7 +22,7 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 })
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://www.archivolt.dev"
+const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://archivolt.dev"
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),

@@ -44,12 +44,12 @@ const clerkHandler = clerkMiddleware(
   },
 )
 
-/** Apex → www before Clerk so a middleware misconfig does not 500 the bare domain. */
-function redirectApexToWww(request: NextRequest): NextResponse | null {
+/** www → apex: Clerk production instance only has archivolt.dev (not www satellite on current plan). */
+function redirectWwwToApex(request: NextRequest): NextResponse | null {
   const host = request.headers.get("host")?.split(":")[0]
-  if (host !== "archivolt.dev") return null
+  if (host !== "www.archivolt.dev") return null
   const url = request.nextUrl.clone()
-  url.host = "www.archivolt.dev"
+  url.host = "archivolt.dev"
   url.protocol = "https:"
   return NextResponse.redirect(url, 308)
 }
@@ -58,8 +58,8 @@ export default async function middleware(
   request: NextRequest,
   event: NextFetchEvent,
 ) {
-  const apexRedirect = redirectApexToWww(request)
-  if (apexRedirect) return apexRedirect
+  const wwwRedirect = redirectWwwToApex(request)
+  if (wwwRedirect) return wwwRedirect
   return clerkHandler(request, event)
 }
 

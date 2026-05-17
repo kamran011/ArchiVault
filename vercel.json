@@ -2,8 +2,8 @@
   "redirects": [
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "archivolt.dev" }],
-      "destination": "https://www.archivolt.dev/:path*",
+      "has": [{ "type": "host", "value": "www.archivolt.dev" }],
+      "destination": "https://archivolt.dev/:path*",
       "permanent": true
     }
   ]

@@ -69,7 +69,7 @@ Checkout metadata (set automatically by `/api/polar/checkout`): `clerk_id`, `pla
 
 | Environment | URL |
 |-------------|-----|
-| Production | `https://www.archivolt.dev/api/polar/webhook` |
+| Production | `https://archivolt.dev/api/polar/webhook` |
 | Local | `https://<ngrok-host>/api/polar/webhook` |
 
 Subscribe at minimum: `checkout.updated`, `order.paid`, `subscription.created`, `subscription.updated`, `subscription.active`, `subscription.canceled`, `subscription.revoked`.
@@ -102,5 +102,5 @@ Migration `003_polar_billing.sql` adds `polar_subscription_id`, `polar_customer_
 2. **Local:** `POLAR_SERVER_DEV=sandbox`, `POLAR_ACCESS_TOKEN_DEV`, sandbox product IDs, `POLAR_WEBHOOK_SECRET_DEV`. `ngrok http 3000` → register webhook URL.
 3. **Checkout:** Sign in → landing pricing or dashboard upgrade → Blueprint → complete sandbox payment → `users.plan` = `blueprint` after webhook.
 4. **Pro cancel:** Subscribe to Pro → sidebar **Cancel subscription** → `subscription_status` = `scheduled_cancellation`, `subscription_cancels_at` set → after period end webhook, plan reverts per sync logic.
-5. **Production:** Deploy with live env → smoke checkout on `https://www.archivolt.dev`.
+5. **Production:** Deploy with live env → smoke checkout on `https://archivolt.dev`.
 6. **Code:** `rg -i paddle architectai` should only hit historical migration filenames.
