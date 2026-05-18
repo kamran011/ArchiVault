@@ -48,7 +48,7 @@ export function PricingSection({ className, id = "pricing" }: PricingSectionProp
           </p>
         </ScrollReveal>
 
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-4">
           {pricingTiersForDisplay().map((tier, index) => (
             <ScrollReveal
               key={tier.id}
@@ -56,8 +56,8 @@ export function PricingSection({ className, id = "pricing" }: PricingSectionProp
               className={cn(
                 "landing-pricing-card relative flex h-full flex-col rounded-xl border bg-card p-6 shadow-lg shadow-black/10",
                 tier.highlighted
-                  ? "border-cyan-500 ring-1 ring-cyan-500/30 md:scale-[1.02]"
-                  : "border-border",
+                  ? "z-10 border-cyan-500 bg-card shadow-2xl shadow-cyan-500/15 ring-2 ring-cyan-500/40 md:-mt-2 md:mb-2 md:scale-[1.04] md:p-7"
+                  : "border-border/80 opacity-[0.97]",
               )}
             >
               {tier.badge ? (

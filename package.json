@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:clean": "npx rimraf@6 .next && next dev",
+    "dev:reset": "node scripts/dev-reset.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

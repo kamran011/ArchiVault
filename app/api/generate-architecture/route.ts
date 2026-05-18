@@ -16,7 +16,8 @@ import { getServiceRoleClient } from "@/lib/supabase"
 import { VBD_SYSTEM_PROMPT_GROQ_CORE, VBD_SYSTEM_PROMPT_CORE } from "@/lib/vbd-prompt"
 import { redactArchitectureForPlan, type UserPlan } from "@/lib/plan-gate"
 import { resolveSimulatedPlan, resolveSimulatedGenerationCount } from "@/lib/dev-plan-simulate"
-import { isGenerationAllowed, generationLimitMessage } from "@/lib/plans"
+import { generationLimitMessage } from "@/lib/plans"
+import { releaseGenerationSlot, reserveGenerationSlot } from "@/lib/generation-quota"
 import { parseModelJson } from "@/lib/parse-model-json"
 import { sanitizeMermaidDiagram } from "@/lib/sanitize-mermaid"
 import type { Architecture } from "@/types/architecture"
@@ -118,10 +119,6 @@ export async function POST(req: Request) {
   const plan = resolveSimulatedPlan((user.plan ?? "free") as UserPlan)
   const generationCount = resolveSimulatedGenerationCount(user.generation_count ?? 0)
 
-  if (!isGenerationAllowed(plan, generationCount)) {
-    return NextResponse.json({ error: generationLimitMessage(plan) }, { status: 403 })
-  }
-
   let body: unknown
 
   try {
@@ -149,6 +146,17 @@ export async function POST(req: Request) {
     )
   }
 
+  const quota = await reserveGenerationSlot(supabase, userId, plan, generationCount)
+  if (!quota.ok) {
+    if (quota.reason === "limit_reached") {
+      return NextResponse.json({ error: generationLimitMessage(plan) }, { status: 403 })
+    }
+    return NextResponse.json(
+      { error: "Could not reserve a generation slot. Please try again." },
+      { status: 409 },
+    )
+  }
+
   const groqMaxTokens = groqKey
     ? groqMaxOutputTokens(VBD_SYSTEM_PROMPT_GROQ_CORE, userPrompt)
     : 12000
@@ -160,7 +168,8 @@ export async function POST(req: Request) {
         controller.enqueue(encodeSse(payload))
       }
 
-      const sendError = (message: string) => {
+      const sendError = async (message: string) => {
+        await releaseGenerationSlot(supabase, userId, quota.previousCount)
         enqueue({ error: message })
         controller.close()
       }
@@ -209,26 +218,9 @@ export async function POST(req: Request) {
             })
             architecture = buildArchitectureFromModelText(retry.text, retry.finishReason)
           } catch {
-            sendError("The model returned invalid JSON. Please try again.")
+            await sendError("The model returned invalid JSON. Please try again.")
             return
           }
-        }
-
-        const nextCount = (user.generation_count ?? 0) + 1
-        const timestamp = new Date().toISOString()
-
-        const { error: updErr } = await supabase
-          .from("users")
-          .update({
-            generation_count: nextCount,
-            last_generation_at: timestamp,
-          })
-          .eq("clerk_id", userId)
-
-        if (updErr) {
-          console.error(updErr)
-          sendError("Failed to update usage")
-          return
         }
 
         const { data: inserted, error: genErr } = await supabase
@@ -244,7 +236,7 @@ export async function POST(req: Request) {
 
         if (genErr || !inserted) {
           console.error(genErr)
-          sendError("Failed to persist generation")
+          await sendError("Failed to persist generation")
           return
         }
 
@@ -256,7 +248,7 @@ export async function POST(req: Request) {
         controller.close()
       } catch (e) {
         console.error(e)
-        sendError(formatAiError(e))
+        await sendError(formatAiError(e))
       }
     },
   })

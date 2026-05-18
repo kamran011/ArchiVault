@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
 import { ClerkProvider } from "@clerk/nextjs"
+import { ClientVercelInsights } from "@/components/shared/ClientVercelInsights"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { clerkProviderAuthProps } from "@/lib/clerk-config"
@@ -9,6 +8,7 @@ import { getClerkPublishableKey } from "@/lib/clerk-env"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/shared/ThemeProvider"
 import { ThemedToaster } from "@/components/shared/ThemedToaster"
+import { UnhandledRejectionGuard } from "@/components/shared/UnhandledRejectionGuard"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -60,12 +60,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               },
             }}
           >
+            <UnhandledRejectionGuard />
             {children}
             <ThemedToaster />
           </ClerkProvider>
         </ThemeProvider>
-        <Analytics />
-        <SpeedInsights />
+        <ClientVercelInsights />
       </body>
     </html>
   )

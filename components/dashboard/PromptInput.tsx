@@ -25,6 +25,7 @@ import type { GenerationLimitUi } from "@/lib/plans";
 import type { UserPlan } from "@/lib/plan-gate";
 import type { PromptPayload } from "./types";
 import { GenerationLimitUpgrade } from "./GenerationLimitUpgrade";
+import { errorMessage } from "@/lib/normalize-error";
 
 type PromptInputProps = {
   disabled: boolean;
@@ -44,9 +45,20 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
     const [techStack, setTechStack] = React.useState<string>(DEFAULT_TECH_STACK);
     const [scale, setScale] = React.useState<string>(DEFAULT_SCALE);
     const [industry, setIndustry] = React.useState<string>(DEFAULT_INDUSTRY);
+    const [submitting, setSubmitting] = React.useState(false);
 
     async function submit() {
-      await onSubmit({ description, techStack, scale, industry });
+      if (submitting || disabled) return;
+      setSubmitting(true);
+      try {
+        await onSubmit({ description, techStack, scale, industry });
+      } catch (reason) {
+        console.error("[PromptInput] submit failed:", reason);
+        // Parent usually sets error state; swallow Event rejections so Next devtools don't show [object Event].
+        void errorMessage(reason);
+      } finally {
+        setSubmitting(false);
+      }
     }
 
     const fieldClass =
@@ -83,8 +95,9 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
             rows={8}
             required
             disabled={formLocked}
+            suppressHydrationWarning
             placeholder="E.g. An e-commerce platform where vendors list products, customers buy, we take a fee, and we notify both parties at every step..."
-            className={cn("resize-none font-mono text-sm leading-relaxed", fieldClass)}
+            className={cn("min-h-[200px] resize-y font-mono text-sm leading-relaxed", fieldClass)}
           />
           {!generationLimitReached ? (
             <p className="text-xs text-muted-foreground">
@@ -93,7 +106,7 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
           ) : null}
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Tech stack">
             <Select
               value={techStack}
@@ -151,13 +164,14 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
             type="button"
             size="lg"
             disabled={submitDisabled}
+            suppressHydrationWarning
             className={cn(
               "w-full rounded-lg font-semibold sm:w-auto sm:min-w-[240px]",
               ctaButtonClass,
             )}
             onClick={() => void submit()}
           >
-            {disabled ? "Generating…" : "Generate Architecture"}
+            {disabled || submitting ? "Generating…" : "Generate Architecture"}
           </Button>
         </div>
       </div>
@@ -173,3 +187,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+

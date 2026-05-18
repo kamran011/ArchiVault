@@ -15,6 +15,7 @@ import { ArchivoltLogo } from "@/components/brand/ArchivoltLogo";
 import { BrandWordmark } from "@/components/brand/BrandWordmark";
 import { DeleteGenerationDialog } from "./DeleteGenerationDialog";
 import { ArchitectureOutput } from "./ArchitectureOutput";
+import { errorMessage } from "@/lib/normalize-error";
 import { DashboardSidebar, type GenerationRow } from "./DashboardSidebar";
 import { StreamingPreview } from "./StreamingPreview";
 import { FadeIn } from "@/components/shared/FadeIn";
@@ -40,6 +41,8 @@ export function DashboardApp() {
   const [deleting, setDeleting] = React.useState(false);
   const [mobileHistoryOpen, setMobileHistoryOpen] = React.useState(false);
   const searchParams = useSearchParams();
+  const generateInFlightRef = React.useRef(false);
+  const guestClaimStartedRef = React.useRef(false);
 
   React.useEffect(() => {
     if (!isStreaming) return;
@@ -96,6 +99,9 @@ export function DashboardApp() {
   }, [loadGenerations]);
 
   React.useEffect(() => {
+    if (guestClaimStartedRef.current) return;
+    guestClaimStartedRef.current = true;
+
     void (async () => {
       try {
         const res = await fetch("/api/guest/claim", { method: "POST", credentials: "include" });
@@ -104,12 +110,13 @@ export function DashboardApp() {
           telemetry("guest_claim_completed");
           telemetry("sign_up_completed");
           void loadGenerations();
+          void loadPlan();
         }
       } catch {
         // ignore
       }
     })();
-  }, [loadGenerations]);
+  }, [loadGenerations, loadPlan]);
 
   React.useEffect(() => {
     if (searchParams.get("checkout") !== "success") return;
@@ -213,8 +220,9 @@ export function DashboardApp() {
         throw new Error("Generation failed — please try again.");
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(errorMessage(e));
     } finally {
+      generateInFlightRef.current = false;
       setGenerating(false);
       setIsStreaming(false);
       setStreamingText("");

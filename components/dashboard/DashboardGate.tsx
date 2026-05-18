@@ -1,9 +1,21 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { normalizeError } from "@/lib/normalize-error";
+import { ChunkLoadErrorBoundary } from "@/components/shared/ChunkLoadErrorBoundary";
+
+const CHUNK_ERROR =
+  "Failed to load Architecture studio. Hard-refresh (Ctrl+Shift+R) or run npm run dev:clean.";
 
 const DashboardApp = dynamic(
-  () => import("./DashboardApp").then((m) => ({ default: m.DashboardApp })),
+  async () => {
+    try {
+      const mod = await import("./DashboardApp");
+      return { default: mod.DashboardApp };
+    } catch (reason) {
+      throw normalizeError(reason, CHUNK_ERROR);
+    }
+  },
   {
     ssr: false,
     loading: () => (
@@ -15,5 +27,9 @@ const DashboardApp = dynamic(
 );
 
 export function DashboardGate() {
-  return <DashboardApp />;
+  return (
+    <ChunkLoadErrorBoundary title="Could not load Architecture studio">
+      <DashboardApp />
+    </ChunkLoadErrorBoundary>
+  );
 }

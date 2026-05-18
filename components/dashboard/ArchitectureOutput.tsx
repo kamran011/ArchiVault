@@ -74,7 +74,8 @@ export function ArchitectureOutput({
   }, [generationId]);
 
   const tabTriggerClass = cn(
-    "shrink-0 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors",
+    /* flex-1 + basis-auto: content-sized minimum, grow to fill row; shrink-0 avoids clipping labels/badges */
+    "min-w-fit flex-1 shrink-0 grow basis-auto rounded-lg px-2.5 py-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors sm:px-3",
     "hover:text-foreground/80",
     "data-active:bg-accent data-active:text-foreground data-active:shadow-sm",
     "aria-selected:bg-accent aria-selected:text-foreground",
@@ -91,8 +92,8 @@ export function ArchitectureOutput({
         {canPdf ? <ExportButton architecture={data} /> : <ExportPdfLocked />}
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="no-scrollbar flex w-full gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1">
+      <Tabs defaultValue="overview" className="w-full min-w-0">
+        <TabsList className="flex w-full min-w-0 max-w-full flex-wrap items-stretch justify-between gap-1 rounded-xl border border-border bg-card p-1.5 sm:flex-nowrap sm:gap-1.5">
           <TabsTrigger value="overview" className={tabTriggerClass}>
             Overview
           </TabsTrigger>

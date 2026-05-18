@@ -1,6 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { formatPolarCheckoutError } from "@/lib/polar-checkout-error"
 import { createPolarClient } from "@/lib/polar"
 import { productIdForPlan } from "@/lib/polar-plans"
 import type { CheckoutPlan } from "@/lib/plans"
@@ -58,8 +59,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url: checkout.url })
   } catch (e) {
-    console.error(e)
-    const message = e instanceof Error ? e.message : "Checkout could not be created"
-    return NextResponse.json({ error: message }, { status: 502 })
+    console.error("[polar checkout]", plan, productId, e)
+    return NextResponse.json(
+      { error: formatPolarCheckoutError(e, plan) },
+      { status: 502 },
+    )
   }
 }

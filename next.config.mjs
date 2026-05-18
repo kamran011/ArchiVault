@@ -34,6 +34,14 @@ const nextConfig = {
     // Vercel: allow *_PROD fallbacks at build time so the client bundle gets pk_live.
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: resolveClerkPublishableForBuild(),
   },
+  webpack(config, { dev }) {
+    if (dev) {
+      // Filesystem pack cache on Windows often goes stale when .next is deleted mid-dev
+      // (MODULE_NOT_FOUND ./NNNN.js → GET /dashboard 500). Memory cache avoids that.
+      config.cache = { type: "memory" }
+    }
+    return config
+  },
 };
 
 export default nextConfig;

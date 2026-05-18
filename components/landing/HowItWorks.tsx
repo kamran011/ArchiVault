@@ -1,47 +1,53 @@
+import { Pencil, Sparkles, Workflow } from "lucide-react"
+
 const steps = [
   {
-    step: "01",
-    title: "Describe your system",
-    body: "Tell us what your system does: who uses it, what services it connects to, and what can't change. Plain English only.",
+    icon: Pencil,
+    title: "Describe",
+    body: "Type your system in plain English — users, integrations, and what must stay stable.",
   },
   {
-    step: "02",
-    title: "Isolate volatility axes",
-    body: "Claude hunts for what WILL change independently — payment providers, notification channels, storage backends — behind stable adapter contracts.",
+    icon: Sparkles,
+    title: "Analyze",
+    body: "Claude maps volatility axes — what will change independently — behind adapter contracts.",
   },
   {
-    step: "03",
-    title: "Ship diagrams + roadmap",
-    body: "Get a Mermaid architecture map, adapter contracts, build sequencing, tech guidance, and a volatility score.",
+    icon: Workflow,
+    title: "Get Blueprint",
+    body: "Receive a Mermaid diagram, interface contracts, build order, and a future-proof score.",
   },
-];
+] as const
 
 export function HowItWorks() {
   return (
-    <section id="how" className="border-y border-zinc-800 bg-[#0a0a0a] px-4 py-24 sm:px-6">
+    <section id="how" className="scroll-mt-24 border-t border-border/50 px-4 py-20 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-16 text-center">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-400">Workflow</p>
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">How Archivolt works</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-zinc-400">
-            Three steps from prose to governed interfaces — no canvas theater.
+        <div className="mb-12 text-center">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-400">How it works</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Three steps to your blueprint</h2>
+          <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
+            From plain English to governed architecture in about a minute.
           </p>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {steps.map(({ step, title, body }) => (
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {steps.map(({ icon: Icon, title, body }, index) => (
             <div
-              key={step}
-              className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-lg shadow-black/20 transition hover:border-zinc-700"
+              key={title}
+              className="flex flex-col items-center rounded-2xl border border-border bg-card p-6 text-center transition-colors hover:border-cyan-500/30 md:items-start md:text-left"
             >
-              <span className="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 font-mono text-sm font-semibold text-cyan-400">
-                {step}
+              <div className="mb-4 flex size-12 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10">
+                <Icon className="size-6 text-cyan-400" aria-hidden />
+              </div>
+              <span className="mb-2 font-mono text-xs font-bold text-cyan-400/80">
+                {String(index + 1).padStart(2, "0")}
               </span>
-              <h3 className="mt-4 text-lg font-semibold text-white">{title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-zinc-400">{body}</p>
+              <h3 className="mb-2 text-lg font-semibold text-foreground">{title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
             </div>
           ))}
         </div>
       </div>
     </section>
-  );
+  )
 }

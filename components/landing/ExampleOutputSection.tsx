@@ -60,7 +60,7 @@ export function ExampleOutputSection() {
     <section id="example" className="scroll-mt-24 border-t border-border/50 px-6 py-24">
       <div className="mx-auto max-w-6xl">
         <ScrollReveal className="mb-12 text-center">
-          <p className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">See what you&apos;ll get</p>
+          <p className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">Full example output</p>
           <h2 className="mb-4 text-3xl font-bold text-foreground">{demo.systemName}</h2>
           <p className="mx-auto max-w-xl text-muted-foreground">
             Generated in {demo.generationSeconds} seconds. Here&apos;s what you&apos;ll get — a full VBD blueprint from

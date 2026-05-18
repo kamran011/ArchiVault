@@ -25,8 +25,6 @@ import {
   pricingTierForPlan,
 } from "@/lib/billing-display"
 import { formatSubscriptionCancelDate, planDisplayName } from "@/lib/format-subscription-date"
-import { nextUpgradePlan } from "@/lib/plans"
-import { startCheckout } from "@/lib/billing/checkout"
 
 export function BillingSettings() {
   const [userPlan, setUserPlan] = React.useState<UserPlan>("free")
@@ -37,7 +35,6 @@ export function BillingSettings() {
   const [cancelOpen, setCancelOpen] = React.useState(false)
   const [canceling, setCanceling] = React.useState(false)
   const [portalLoading, setPortalLoading] = React.useState(false)
-  const [checkoutLoading, setCheckoutLoading] = React.useState(false)
 
   const loadPlan = React.useCallback(async () => {
     setLoading(true)
@@ -66,8 +63,6 @@ export function BillingSettings() {
   const isScheduledCancel = subscriptionStatus === "scheduled_cancellation"
   const showManageSubscription = recurring
   const showCancelAction = recurring && !isScheduledCancel
-  const upgradePlan = nextUpgradePlan(userPlan)
-
   async function handleCustomerPortal() {
     setPortalLoading(true)
     try {
@@ -79,19 +74,6 @@ export function BillingSettings() {
       toast.error(e instanceof Error ? e.message : "Could not open billing portal")
     } finally {
       setPortalLoading(false)
-    }
-  }
-
-  async function handleUpgrade() {
-    if (!upgradePlan) return
-    setCheckoutLoading(true)
-    try {
-      const url = await startCheckout(upgradePlan)
-      window.location.href = url
-    } catch {
-      toast.error("Checkout could not be started")
-    } finally {
-      setCheckoutLoading(false)
     }
   }
 
@@ -202,35 +184,18 @@ export function BillingSettings() {
               {manageOpen ? (
                 <CardContent className="space-y-1 pt-0">
                   <Separator className="mb-3" />
-                  {upgradePlan ? (
-                    <button
-                      type="button"
-                      disabled={checkoutLoading}
-                      onClick={() => void handleUpgrade()}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition-colors hover:bg-accent"
-                    >
-                      <RefreshCw className="size-4 text-muted-foreground" aria-hidden />
-                      <span>
-                        <span className="font-medium text-foreground">Change plan</span>
-                        <span className="mt-0.5 block text-xs text-muted-foreground">
-                          Upgrade or switch tiers
-                        </span>
+                  <Link
+                    href="/pricing"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition-colors hover:bg-accent"
+                  >
+                    <RefreshCw className="size-4 text-muted-foreground" aria-hidden />
+                    <span>
+                      <span className="font-medium text-foreground">Change plan</span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        Compare tiers and start checkout on the pricing page
                       </span>
-                    </button>
-                  ) : (
-                    <Link
-                      href="/pricing"
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition-colors hover:bg-accent"
-                    >
-                      <RefreshCw className="size-4 text-muted-foreground" aria-hidden />
-                      <span>
-                        <span className="font-medium text-foreground">Change plan</span>
-                        <span className="mt-0.5 block text-xs text-muted-foreground">
-                          View all plans on the pricing page
-                        </span>
-                      </span>
-                    </Link>
-                  )}
+                    </span>
+                  </Link>
 
                   <button
                     type="button"

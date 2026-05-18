@@ -63,6 +63,8 @@ Copy each **Product ID** (`prod_…`) into env:
 
 Use sandbox product IDs in `.env.local` with `POLAR_SERVER_DEV=sandbox`. On Vercel set `POLAR_SERVER_PROD=production` and production product IDs.
 
+**Archived products:** Polar rejects checkout with `Product is archived.` Update the product in the Polar dashboard (unarchive or create a replacement), copy the new Product ID into the matching `POLAR_*_PRODUCT_ID` on Vercel, and redeploy.
+
 Checkout metadata (set automatically by `/api/polar/checkout`): `clerk_id`, `plan` (`blueprint` | `pro` | `team`). Customer `externalCustomerId` is the Clerk user id.
 
 ## Webhooks

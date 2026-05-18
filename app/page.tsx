@@ -5,6 +5,7 @@ import { AuthNav } from "@/components/shared/AuthNav"
 import { BrandWordmark } from "@/components/brand/BrandWordmark"
 import { ExampleOutputSection } from "@/components/landing/ExampleOutputSection"
 import { HeroDemoPreview } from "@/components/landing/HeroDemoPreview"
+import { HowItWorks } from "@/components/landing/HowItWorks"
 import { ItsThatSimpleSection } from "@/components/landing/ItsThatSimpleSection"
 import { CredibilitySection } from "@/components/landing/CredibilitySection"
 import { WhoIsArchivoltForSection } from "@/components/landing/WhoIsArchivoltForSection"
@@ -31,7 +32,7 @@ export default function Home() {
       </nav>
 
       <section className="px-6 pb-16 pt-32">
-        <div className="mx-auto max-w-4xl animate-fade-in-up text-center motion-reduce:animate-none">
+        <div className="mx-auto max-w-5xl animate-fade-in-up text-center motion-reduce:animate-none">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-400">
             <span className="text-purple-400">{"\u2726"}</span>
             <span>Powered by Claude {"\u00b7"} VBD methodology</span>
@@ -39,51 +40,47 @@ export default function Home() {
           <h1 className="hero-title mb-3 text-balance text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
             <span className="block text-foreground">Design systems that survive requirement changes</span>
             <span className="mt-2 block bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
-              Get a VBD blueprint in 60 seconds
+              AI-powered in 60 seconds.
             </span>
           </h1>
-          <p className="mx-auto mb-8 max-w-2xl text-lg text-foreground/90 sm:text-xl">
-            <span className="text-muted-foreground">No credit card.</span> Plain English in, governed architecture out.
-          </p>
-          <p className="mx-auto mb-8 max-w-2xl text-base text-muted-foreground">
-            Volatility-Based Decomposition decomposes systems based on what changes, not what exists.{" "}
-            So you swap
-            providers without rewriting core logic.
+          <p className="mx-auto mb-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            Volatility-Based Decomposition puts what will change behind adapters, so you swap providers without
+            rewriting core logic.
           </p>
 
-          <div className="mb-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
+          <HeroDemoPreview className="mb-8" />
+
+          <div className="mb-6 flex w-full flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
             <Link
               href="/sign-up"
               onClick={() => telemetry("cta_hero_signup")}
-              className="landing-cta landing-cta-primary landing-cta-hero rounded-xl bg-cyan-500 px-10 py-4 text-lg font-bold text-black shadow-lg shadow-cyan-500/30 hover:bg-cyan-400"
+              className="landing-cta landing-cta-primary landing-cta-hero w-full rounded-xl bg-cyan-500 px-10 py-5 text-lg font-bold text-black shadow-xl shadow-cyan-500/35 hover:bg-cyan-400 sm:w-auto"
             >
               Generate free blueprint
             </Link>
             <Link
               href="/try"
               onClick={() => telemetry("cta_hero_guest")}
-              className="landing-cta landing-cta-secondary rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-8 py-4 text-base font-semibold text-cyan-300 hover:border-cyan-400/60 hover:bg-cyan-500/15"
+              className="landing-cta landing-cta-secondary w-full rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-sm font-semibold text-cyan-300 hover:border-cyan-400/60 hover:bg-cyan-500/15 sm:w-auto"
             >
               Try as guest
             </Link>
             <button
               type="button"
               onClick={() => {
-                telemetry("cta_hero_see_example")
-                document.getElementById("example")?.scrollIntoView({ behavior: "smooth" })
+                telemetry("cta_hero_learn_more")
+                document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })
               }}
-              className="landing-cta rounded-xl border border-border px-8 py-4 text-base text-muted-foreground transition-colors hover:border-zinc-500 hover:text-foreground"
+              className="landing-cta w-full rounded-xl border border-border px-6 py-3 text-sm text-muted-foreground transition-colors hover:border-zinc-500 hover:text-foreground sm:w-auto"
             >
-              See what you&apos;ll get
+              Learn more
             </button>
           </div>
           <p className="mb-8 text-sm text-muted-foreground/70">
             No credit card required {"\u00b7"} One free blueprint as guest or after sign-up
           </p>
 
-          <SocialProofSection className="mb-10 px-0" />
-
-          <HeroDemoPreview />
+          <SocialProofSection className="mb-2 px-0" />
         </div>
       </section>
 
@@ -91,40 +88,7 @@ export default function Home() {
 
       <CredibilitySection />
 
-      <section className="border-t border-border/50 px-6 py-24">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="mb-4 text-center text-3xl font-bold">How Archivolt works</h2>
-          <p className="mb-16 text-center text-muted-foreground">Three steps from prose to governed interfaces</p>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {[
-              {
-                num: "01",
-                title: "Describe your system",
-                desc: "Tell us what your system does: who uses it, what services it connects to, and what can\u2019t change. Plain English only.",
-              },
-              {
-                num: "02",
-                title: "Isolate volatility axes",
-                desc: "Claude hunts for what WILL change independently \u2014 payment providers, notification channels, storage backends \u2014 behind stable adapter contracts.",
-              },
-              {
-                num: "03",
-                title: "Ship diagrams + roadmap",
-                desc: "Get a Mermaid architecture map, adapter contracts, build sequencing, tech guidance, and a volatility score.",
-              },
-            ].map((step) => (
-              <div
-                key={step.num}
-                className="rounded-2xl border border-border bg-card p-6 transition-colors hover:border-border"
-              >
-                <div className="mb-4 font-mono text-sm font-bold text-cyan-400">{step.num}</div>
-                <h3 className="mb-3 text-lg font-semibold text-foreground">{step.title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HowItWorks />
 
       <ItsThatSimpleSection />
 

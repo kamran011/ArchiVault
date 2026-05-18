@@ -39,7 +39,7 @@
   }
 
   .landing-cta-hero {
-    @apply ring-2 ring-cyan-400/40;
+    @apply ring-2 ring-cyan-400/50 shadow-xl shadow-cyan-500/30;
   }
 
   .landing-cta-secondary:hover {

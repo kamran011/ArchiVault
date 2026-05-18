@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { AuthNav } from "@/components/shared/AuthNav"
 import { BrandWordmark } from "@/components/brand/BrandWordmark"
 import { PricingSection } from "@/components/landing/PricingSection"
@@ -18,9 +17,11 @@ export default function PricingPage() {
       <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
         <div className={siteGutterClass}>
           <div className={cn(siteContainerClass, "flex h-16 items-center justify-between")}>
-            <Link href="/" className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500">
-              <BrandWordmark textClassName="text-lg" logoSize={28} />
-            </Link>
+            <BrandWordmark
+              textClassName="text-lg"
+              logoSize={28}
+              className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+            />
             <AuthNav variant="landing" />
           </div>
         </div>
