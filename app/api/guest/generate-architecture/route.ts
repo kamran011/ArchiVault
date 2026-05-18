@@ -23,6 +23,7 @@ import { ANTHROPIC_MODEL_FALLBACK_CHAIN } from "@/lib/anthropic"
 import { VBD_SYSTEM_PROMPT_GROQ_CORE } from "@/lib/vbd-prompt"
 import { redactArchitectureForPlan } from "@/lib/plan-gate"
 import { getServiceRoleClient } from "@/lib/supabase"
+import { messageForGuestInsertFailure } from "@/lib/guest-generation-errors"
 
 const GUEST_IP_DAILY_LIMIT = 5
 
@@ -165,12 +166,12 @@ export async function POST(req: Request) {
         })
 
         if (insertErr) {
-          console.error(insertErr)
+          console.error("[guest generate] insert guest_generations:", insertErr.code, insertErr.message, insertErr)
           if (insertErr.code === "23505") {
             sendError("You have already used your free guest blueprint. Sign up to continue.")
             return
           }
-          sendError("Failed to save guest generation")
+          sendError(messageForGuestInsertFailure(insertErr))
           return
         }
 
