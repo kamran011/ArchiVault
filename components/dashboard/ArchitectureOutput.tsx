@@ -44,6 +44,7 @@ export function ArchitectureOutput({
   userPlan = "free",
   techStack = "Any",
   generationId = null,
+  tabsVariant = "dashboard",
   onSystemDesignUpdate,
   onTechStackUpdate,
   onScaffoldUpdate,
@@ -52,6 +53,8 @@ export function ArchitectureOutput({
   userPlan?: UserPlan;
   techStack?: string;
   generationId?: string | null;
+  /** Guest /try uses scrollable intrinsic-width tabs; dashboard uses flexible full-width row. */
+  tabsVariant?: "dashboard" | "guest";
   onSystemDesignUpdate?: (systemDesign: SystemDesign) => void;
   onTechStackUpdate?: (techStackAnalysis: TechStackAnalysis) => void;
   onScaffoldUpdate?: (scaffoldPrompt: string) => void;
@@ -73,14 +76,22 @@ export function ArchitectureOutput({
     setIsGeneratingSystemDesign(false);
   }, [generationId]);
 
+  const isGuestTabs = tabsVariant === "guest";
+
   const tabTriggerClass = cn(
-    /* flex-1 + basis-auto: content-sized minimum, grow to fill row; shrink-0 avoids clipping labels/badges */
-    "min-w-fit flex-1 shrink-0 grow basis-auto rounded-lg px-2.5 py-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors sm:px-3",
+    "rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors",
+    isGuestTabs
+      ? "shrink-0"
+      : "min-w-fit flex-1 shrink-0 grow basis-auto sm:px-3",
     "hover:text-foreground/80",
     "data-active:bg-accent data-active:text-foreground data-active:shadow-sm",
     "aria-selected:bg-accent aria-selected:text-foreground",
     "shadow-none after:hidden",
   );
+
+  const tabsListClass = isGuestTabs
+    ? "no-scrollbar flex w-full gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1 [-webkit-overflow-scrolling:touch] touch-pan-x"
+    : "flex w-full min-w-0 max-w-full flex-wrap items-stretch justify-between gap-1 rounded-xl border border-border bg-card p-1.5 sm:flex-nowrap sm:gap-1.5";
 
   return (
     <div className="w-full space-y-4">
@@ -93,7 +104,7 @@ export function ArchitectureOutput({
       </div>
 
       <Tabs defaultValue="overview" className="w-full min-w-0">
-        <TabsList className="flex w-full min-w-0 max-w-full flex-wrap items-stretch justify-between gap-1 rounded-xl border border-border bg-card p-1.5 sm:flex-nowrap sm:gap-1.5">
+        <TabsList className={tabsListClass}>
           <TabsTrigger value="overview" className={tabTriggerClass}>
             Overview
           </TabsTrigger>

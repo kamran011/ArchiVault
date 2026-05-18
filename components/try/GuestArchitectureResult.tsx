@@ -37,7 +37,7 @@ export function GuestArchitectureResult({
 }) {
   return (
     <ChunkLoadErrorBoundary title="Could not load blueprint viewer">
-      <ArchitectureOutput data={data} userPlan={userPlan} />
+      <ArchitectureOutput data={data} userPlan={userPlan} tabsVariant="guest" />
     </ChunkLoadErrorBoundary>
   )
 }

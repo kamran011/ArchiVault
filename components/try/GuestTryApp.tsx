@@ -118,7 +118,7 @@ export function GuestTryApp() {
       </nav>
 
       <main className={cn(siteGutterClass, "py-8 sm:py-10")}>
-        <div className={cn(siteContainerClass, "mx-auto w-full min-w-0 max-w-3xl space-y-8")}>
+        <div className={cn(siteContainerClass, "min-w-0 space-y-8")}>
           <div className="text-center">
             <h1 className="mb-2 text-3xl font-bold tracking-tight sm:text-4xl">Try Archivolt as a guest</h1>
             <p className="text-sm text-muted-foreground sm:text-base">
