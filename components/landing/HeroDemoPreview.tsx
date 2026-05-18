@@ -5,6 +5,7 @@ import Link from "next/link"
 import { FITCOACH_DEMO } from "@/lib/demo/fitcoach-example"
 import { telemetry } from "@/lib/telemetry"
 import { cn } from "@/lib/utils"
+import { useGuestBlueprintStatus } from "@/hooks/use-guest-blueprint-status"
 
 const MermaidDiagram = dynamic(
   () => import("@/components/dashboard/MermaidDiagram").then((m) => m.MermaidDiagram),
@@ -20,6 +21,19 @@ const MermaidDiagram = dynamic(
 
 export function HeroDemoPreview({ className }: { className?: string }) {
   const demo = FITCOACH_DEMO
+  const { isSignedIn, hasUsedGuest, ready } = useGuestBlueprintStatus()
+
+  const href = isSignedIn ? "/dashboard" : ready && hasUsedGuest ? "/sign-up?from=guest" : "/try"
+  const ariaLabel =
+    ready && hasUsedGuest && !isSignedIn
+      ? "Save your guest blueprint — sign up"
+      : "Try the FitCoach example blueprint — opens guest try page"
+  const subtext =
+    ready && hasUsedGuest && !isSignedIn
+      ? "You already tried guest — sign up to save and generate more"
+      : "Click to generate your own — no sign-up"
+  const footerCta =
+    ready && hasUsedGuest && !isSignedIn ? "Save this blueprint →" : "Try it free →"
 
   return (
     <div className={cn("mx-auto w-full max-w-4xl", className)}>
@@ -27,15 +41,19 @@ export function HeroDemoPreview({ className }: { className?: string }) {
         See what you&apos;ll get in 60 seconds
       </p>
       <Link
-        href="/try"
-        onClick={() => telemetry("cta_hero_demo_click")}
+        href={href}
+        onClick={() =>
+          telemetry(
+            ready && hasUsedGuest && !isSignedIn ? "cta_hero_demo_save" : "cta_hero_demo_click",
+          )
+        }
         className="group block rounded-2xl border border-cyan-500/25 bg-card/90 p-4 shadow-xl shadow-cyan-500/10 transition-all hover:border-cyan-400/50 hover:shadow-cyan-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 sm:p-5"
-        aria-label="Try the FitCoach example blueprint — opens guest try page"
+        aria-label={ariaLabel}
       >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
           <div className="text-left">
             <p className="text-xs font-medium uppercase tracking-widest text-cyan-400/90">{demo.systemName}</p>
-            <p className="text-[11px] text-muted-foreground">Click to generate your own — no sign-up</p>
+            <p className="text-[11px] text-muted-foreground">{subtext}</p>
           </div>
           <div className="flex items-baseline gap-1 rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5">
             <span className="text-2xl font-bold tabular-nums text-cyan-400">{demo.futureProofScore}</span>
@@ -53,7 +71,7 @@ export function HeroDemoPreview({ className }: { className?: string }) {
         </div>
 
         <p className="mt-3 text-center text-xs font-medium text-cyan-300/90 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-          Try it free →
+          {footerCta}
         </p>
       </Link>
     </div>

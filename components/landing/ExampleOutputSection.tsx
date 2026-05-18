@@ -6,6 +6,8 @@ import { CopyButton } from "@/components/shared/CopyButton"
 import { ScrollReveal } from "@/components/shared/ScrollReveal"
 import { FITCOACH_DEMO } from "@/lib/demo/fitcoach-example"
 import { telemetry } from "@/lib/telemetry"
+import { useGuestBlueprintStatus } from "@/hooks/use-guest-blueprint-status"
+import { GuestAwareCtas } from "@/components/landing/GuestAwareCtas"
 
 const MermaidDiagram = dynamic(
   () => import("@/components/dashboard/MermaidDiagram").then((m) => m.MermaidDiagram),
@@ -56,6 +58,8 @@ const demo = FITCOACH_DEMO
 const adapterBlock = ["```ts", demo.adapterContract.trim(), "```"].join("\n")
 
 export function ExampleOutputSection() {
+  const { isSignedIn, hasUsedGuest, ready } = useGuestBlueprintStatus()
+
   return (
     <section id="example" className="scroll-mt-24 border-t border-border/50 px-6 py-24">
       <div className="mx-auto max-w-6xl">
@@ -133,21 +137,17 @@ export function ExampleOutputSection() {
           <p className="mb-8 text-sm text-muted-foreground">
             This blueprint was generated in {demo.generationSeconds} seconds from a plain-English description.
           </p>
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/sign-up"
-              onClick={() => telemetry("cta_example_signup")}
-              className="landing-cta landing-cta-primary inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-8 py-3.5 text-base font-semibold text-black hover:bg-cyan-400"
-            >
-              Generate free blueprint
-            </Link>
-            <Link
-              href="/try"
-              onClick={() => telemetry("cta_example_guest")}
-              className="landing-cta landing-cta-secondary inline-flex rounded-xl border border-border px-6 py-3.5 text-base text-foreground/80 hover:border-zinc-500"
-            >
-              Try as guest
-            </Link>
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
+            {!isSignedIn && ready && hasUsedGuest ? null : !isSignedIn ? (
+              <Link
+                href="/sign-up"
+                onClick={() => telemetry("cta_example_signup")}
+                className="landing-cta landing-cta-primary inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-8 py-3.5 text-base font-semibold text-black hover:bg-cyan-400"
+              >
+                Generate free blueprint
+              </Link>
+            ) : null}
+            {!isSignedIn ? <GuestAwareCtas layout="inline" /> : null}
           </div>
         </ScrollReveal>
       </div>
