@@ -98,12 +98,20 @@ export function ExampleOutputSection() {
           <p className="mb-8 text-sm text-muted-foreground">
             This blueprint was generated in 68 seconds from a plain-English description.
           </p>
-          <Link
-            href="/sign-up"
-            className="landing-cta landing-cta-primary inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-black hover:bg-cyan-400"
-          >
-            Generate your architecture free →
-          </Link>
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href="/sign-up"
+              className="landing-cta landing-cta-primary inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-8 py-3.5 text-base font-semibold text-black hover:bg-cyan-400"
+            >
+              Generate free blueprint
+            </Link>
+            <Link
+              href="/try"
+              className="landing-cta landing-cta-secondary inline-flex rounded-xl border border-border px-6 py-3.5 text-base text-foreground/80 hover:border-zinc-500"
+            >
+              Try as guest
+            </Link>
+          </div>
         </ScrollReveal>
       </div>
     </section>

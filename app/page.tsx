@@ -4,6 +4,7 @@ import Link from "next/link"
 import { AuthNav } from "@/components/shared/AuthNav"
 import { BrandWordmark } from "@/components/brand/BrandWordmark"
 import { ExampleOutputSection } from "@/components/landing/ExampleOutputSection"
+import { HeroDemoPreview } from "@/components/landing/HeroDemoPreview"
 import { ItsThatSimpleSection } from "@/components/landing/ItsThatSimpleSection"
 import { WhoIsArchivoltForSection } from "@/components/landing/WhoIsArchivoltForSection"
 import { FaqSection } from "@/components/landing/FaqSection"
@@ -17,7 +18,6 @@ export default function Home() {
   return (
     <div className="landing-surface min-h-screen text-foreground">
       <ScrollPricingIntoViewOnMount />
-      {/* NAVBAR */}
       <nav className="fixed top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
         <div className={siteGutterClass}>
           <div className={cn(siteContainerClass, "flex h-16 items-center justify-between")}>
@@ -27,49 +27,49 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* HERO */}
-      <section className="px-6 pb-24 pt-32">
+      <section className="px-6 pb-16 pt-32">
         <div className="mx-auto max-w-4xl animate-fade-in-up text-center motion-reduce:animate-none">
-          <div className="mb-8 inline-flex animate-pulse-glow items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-400 motion-reduce:animate-none">
-            <span className="text-purple-400">✦</span>
-            <span>Powered by Claude · VBD methodology</span>
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-400">
+            <span className="text-purple-400">{"\u2726"}</span>
+            <span>Powered by Claude {"\u00b7"} VBD methodology</span>
           </div>
-          <h1 className="hero-title mb-6 text-balance text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            <span className="block text-foreground">Architect your system</span>
-            <span className="block bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
-              for the next 10 years
-            </span>
+          <h1 className="hero-title mb-5 text-balance text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+            Design systems that survive requirement changes
           </h1>
-          <p className="mx-auto mb-10 max-w-2xl text-xl text-muted-foreground">
-            When your client says &quot;email is so 90s, use SMS instead&quot;{"\u2014"} you change one adapter. Not your
-            entire codebase.
+          <p className="mx-auto mb-4 max-w-2xl text-lg text-foreground/90 sm:text-xl">
+            Get a VBD architecture blueprint in 60 seconds.{" "}
+            <span className="text-muted-foreground">No credit card.</span>
           </p>
-          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+          <p className="mx-auto mb-8 max-w-2xl text-base text-muted-foreground">
+            Volatility-Based Decomposition decomposes systems based on what changes, not what exists.{" "}
+            So you swap
+            providers without rewriting core logic.
+          </p>
+
+          <div className="mb-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Link
               href="/sign-up"
-              className="landing-cta landing-cta-primary rounded-xl bg-cyan-500 px-8 py-3.5 text-base font-semibold text-black hover:bg-cyan-400"
+              className="landing-cta landing-cta-primary landing-cta-hero rounded-xl bg-cyan-500 px-10 py-4 text-lg font-bold text-black shadow-lg shadow-cyan-500/30 hover:bg-cyan-400"
             >
-              Generate free architecture
+              Generate free blueprint
             </Link>
-            <button
-              type="button"
-              onClick={() =>
-                document.getElementById("example")?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="landing-cta landing-cta-secondary rounded-xl border border-border px-8 py-3.5 text-base text-foreground/80 hover:border-zinc-500"
+            <Link
+              href="/try"
+              className="landing-cta landing-cta-secondary rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-8 py-4 text-base font-semibold text-cyan-300 hover:border-cyan-400/60 hover:bg-cyan-500/15"
             >
-              See example output
-            </button>
+              Try as guest
+            </Link>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground/70">
-            No credit card required {"\u00b7"} First architecture free
+          <p className="mb-10 text-sm text-muted-foreground/70">
+            No credit card required {"\u00b7"} One free blueprint as guest or after sign-up
           </p>
+
+          <HeroDemoPreview />
         </div>
       </section>
 
       <WhoIsArchivoltForSection />
 
-      {/* HOW IT WORKS */}
       <section className="border-t border-border/50 px-6 py-24">
         <div className="mx-auto max-w-6xl">
           <h2 className="mb-4 text-center text-3xl font-bold">How Archivolt works</h2>
@@ -115,3 +115,4 @@ export default function Home() {
     </div>
   )
 }
+

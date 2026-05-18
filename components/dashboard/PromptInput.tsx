@@ -32,14 +32,15 @@ type PromptInputProps = {
   userPlan?: UserPlan;
   generationLimitReached?: boolean;
   generationLimitUi?: GenerationLimitUi | null;
+  initialDescription?: string;
 };
 
 export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProps>(
   function PromptInput(
-    { disabled, onSubmit, userPlan = "free", generationLimitReached = false, generationLimitUi },
+    { disabled, onSubmit, userPlan = "free", generationLimitReached = false, generationLimitUi, initialDescription = "" },
     ref,
   ) {
-    const [description, setDescription] = React.useState("");
+    const [description, setDescription] = React.useState(initialDescription);
     const [techStack, setTechStack] = React.useState<string>(DEFAULT_TECH_STACK);
     const [scale, setScale] = React.useState<string>(DEFAULT_SCALE);
     const [industry, setIndustry] = React.useState<string>(DEFAULT_INDUSTRY);

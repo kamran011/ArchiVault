@@ -38,6 +38,10 @@
     @apply shadow-cyan-500/25;
   }
 
+  .landing-cta-hero {
+    @apply ring-2 ring-cyan-400/40;
+  }
+
   .landing-cta-secondary:hover {
     @apply shadow-black/20;
   }

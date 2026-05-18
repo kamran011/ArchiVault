@@ -95,6 +95,10 @@ export function DashboardApp() {
   }, [loadGenerations]);
 
   React.useEffect(() => {
+    void fetch("/api/guest/claim", { method: "POST", credentials: "include" }).catch(() => {});
+  }, []);
+
+  React.useEffect(() => {
     if (searchParams.get("checkout") !== "success") return;
     void loadPlan();
     void loadGenerations();

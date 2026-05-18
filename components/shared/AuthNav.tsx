@@ -52,7 +52,7 @@ export function AuthNav({ variant = "landing" }: AuthNavProps) {
           href="/sign-up"
           className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-cyan-400"
         >
-          Get started
+          Generate free blueprint
         </Link>
       </div>
     )
