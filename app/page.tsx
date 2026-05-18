@@ -6,13 +6,16 @@ import { BrandWordmark } from "@/components/brand/BrandWordmark"
 import { ExampleOutputSection } from "@/components/landing/ExampleOutputSection"
 import { HeroDemoPreview } from "@/components/landing/HeroDemoPreview"
 import { ItsThatSimpleSection } from "@/components/landing/ItsThatSimpleSection"
+import { CredibilitySection } from "@/components/landing/CredibilitySection"
 import { WhoIsArchivoltForSection } from "@/components/landing/WhoIsArchivoltForSection"
 import { FaqSection } from "@/components/landing/FaqSection"
 import { PricingSection } from "@/components/landing/PricingSection"
 import { ScrollPricingIntoViewOnMount } from "@/components/shared/PricingCtaLink"
 import { SiteFooter } from "@/components/shared/SiteFooter"
+import { SocialProofSection } from "@/components/landing/SocialProofSection"
 import { siteContainerClass, siteGutterClass } from "@/lib/site-layout"
 import { cn } from "@/lib/utils"
+import { telemetry } from "@/lib/telemetry"
 
 export default function Home() {
   return (
@@ -33,12 +36,14 @@ export default function Home() {
             <span className="text-purple-400">{"\u2726"}</span>
             <span>Powered by Claude {"\u00b7"} VBD methodology</span>
           </div>
-          <h1 className="hero-title mb-5 text-balance text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            Design systems that survive requirement changes
+          <h1 className="hero-title mb-3 text-balance text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+            <span className="block text-foreground">Design systems that survive requirement changes</span>
+            <span className="mt-2 block bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
+              Get a VBD blueprint in 60 seconds
+            </span>
           </h1>
-          <p className="mx-auto mb-4 max-w-2xl text-lg text-foreground/90 sm:text-xl">
-            Get a VBD architecture blueprint in 60 seconds.{" "}
-            <span className="text-muted-foreground">No credit card.</span>
+          <p className="mx-auto mb-8 max-w-2xl text-lg text-foreground/90 sm:text-xl">
+            <span className="text-muted-foreground">No credit card.</span> Plain English in, governed architecture out.
           </p>
           <p className="mx-auto mb-8 max-w-2xl text-base text-muted-foreground">
             Volatility-Based Decomposition decomposes systems based on what changes, not what exists.{" "}
@@ -46,29 +51,45 @@ export default function Home() {
             providers without rewriting core logic.
           </p>
 
-          <div className="mb-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+          <div className="mb-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
             <Link
               href="/sign-up"
+              onClick={() => telemetry("cta_hero_signup")}
               className="landing-cta landing-cta-primary landing-cta-hero rounded-xl bg-cyan-500 px-10 py-4 text-lg font-bold text-black shadow-lg shadow-cyan-500/30 hover:bg-cyan-400"
             >
               Generate free blueprint
             </Link>
             <Link
               href="/try"
+              onClick={() => telemetry("cta_hero_guest")}
               className="landing-cta landing-cta-secondary rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-8 py-4 text-base font-semibold text-cyan-300 hover:border-cyan-400/60 hover:bg-cyan-500/15"
             >
               Try as guest
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                telemetry("cta_hero_see_example")
+                document.getElementById("example")?.scrollIntoView({ behavior: "smooth" })
+              }}
+              className="landing-cta rounded-xl border border-border px-8 py-4 text-base text-muted-foreground transition-colors hover:border-zinc-500 hover:text-foreground"
+            >
+              See what you&apos;ll get
+            </button>
           </div>
-          <p className="mb-10 text-sm text-muted-foreground/70">
+          <p className="mb-8 text-sm text-muted-foreground/70">
             No credit card required {"\u00b7"} One free blueprint as guest or after sign-up
           </p>
+
+          <SocialProofSection className="mb-10 px-0" />
 
           <HeroDemoPreview />
         </div>
       </section>
 
       <WhoIsArchivoltForSection />
+
+      <CredibilitySection />
 
       <section className="border-t border-border/50 px-6 py-24">
         <div className="mx-auto max-w-6xl">

@@ -9,6 +9,7 @@ import { StreamingPreview } from "@/components/dashboard/StreamingPreview"
 import type { PromptPayload } from "@/components/dashboard/types"
 import type { Architecture } from "@/types/architecture"
 import { siteContainerClass, siteGutterClass } from "@/lib/site-layout"
+import { telemetry } from "@/lib/telemetry"
 import { cn } from "@/lib/utils"
 
 const DEFAULT_DESCRIPTION =
@@ -28,6 +29,8 @@ export function GuestTryApp() {
     setIsStreaming(true)
     setStreamingText("")
     setArchitecture(null)
+
+    telemetry("guest_generation_started")
 
     try {
       const res = await fetch("/api/guest/generate-architecture", {
@@ -76,6 +79,7 @@ export function GuestTryApp() {
             completed = true
             setArchitecture(data.architecture)
             setGuestUsed(true)
+            telemetry("guest_generation_completed")
           }
         }
       }
@@ -159,6 +163,7 @@ export function GuestTryApp() {
                 </p>
                 <Link
                   href="/sign-up?from=guest"
+                  onClick={() => telemetry("guest_signup_prompt_click")}
                   className="landing-cta landing-cta-primary inline-flex rounded-xl bg-cyan-500 px-8 py-3.5 text-base font-semibold text-black hover:bg-cyan-400"
                 >
                   Sign up to save your blueprint

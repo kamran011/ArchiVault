@@ -18,6 +18,7 @@ import { ArchitectureOutput } from "./ArchitectureOutput";
 import { DashboardSidebar, type GenerationRow } from "./DashboardSidebar";
 import { StreamingPreview } from "./StreamingPreview";
 import { FadeIn } from "@/components/shared/FadeIn";
+import { telemetry } from "@/lib/telemetry";
 
 export function DashboardApp() {
   const exportId = React.useId().replace(/:/g, "");
@@ -95,8 +96,20 @@ export function DashboardApp() {
   }, [loadGenerations]);
 
   React.useEffect(() => {
-    void fetch("/api/guest/claim", { method: "POST", credentials: "include" }).catch(() => {});
-  }, []);
+    void (async () => {
+      try {
+        const res = await fetch("/api/guest/claim", { method: "POST", credentials: "include" });
+        const data = (await res.json().catch(() => ({}))) as { claimed?: boolean };
+        if (res.ok && data.claimed) {
+          telemetry("guest_claim_completed");
+          telemetry("sign_up_completed");
+          void loadGenerations();
+        }
+      } catch {
+        // ignore
+      }
+    })();
+  }, [loadGenerations]);
 
   React.useEffect(() => {
     if (searchParams.get("checkout") !== "success") return;

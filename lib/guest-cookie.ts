@@ -17,6 +17,11 @@ export function guestCookieHeader(token: string): string {
   return `${GUEST_COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${GUEST_COOKIE_MAX_AGE}${secure}`
 }
 
+export function guestCookieClearHeader(): string {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : ""
+  return `${GUEST_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`
+}
+
 export function parseGuestToken(cookieHeader: string | null): string | null {
   if (!cookieHeader) return null
   const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${GUEST_COOKIE_NAME}=([^;]+)`))

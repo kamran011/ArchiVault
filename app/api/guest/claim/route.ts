@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
-import { parseGuestToken } from "@/lib/guest-cookie"
+import { guestCookieClearHeader, parseGuestToken } from "@/lib/guest-cookie"
 import { getServiceRoleClient } from "@/lib/supabase"
 import type { Architecture } from "@/types/architecture"
 
@@ -75,5 +75,7 @@ export async function POST(req: Request) {
       .eq("clerk_id", userId)
   }
 
-  return NextResponse.json({ claimed: true, generationId: inserted.id })
+  const res = NextResponse.json({ claimed: true, generationId: inserted.id })
+  res.headers.append("Set-Cookie", guestCookieClearHeader())
+  return res
 }

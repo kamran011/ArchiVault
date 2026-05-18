@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useAuth, UserButton, SignInButton, SignUpButton } from "@clerk/nextjs"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { telemetry } from "@/lib/telemetry"
 
 type AuthNavProps = {
   variant?: "landing" | "header"
@@ -50,6 +51,7 @@ export function AuthNav({ variant = "landing" }: AuthNavProps) {
         </Link>
         <Link
           href="/sign-up"
+          onClick={() => telemetry("cta_nav_signup")}
           className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-cyan-400"
         >
           Generate free blueprint
@@ -79,7 +81,7 @@ export function AuthNav({ variant = "landing" }: AuthNavProps) {
             "rounded-lg bg-cyan-500 font-semibold text-black shadow-lg shadow-cyan-500/20 hover:bg-cyan-400",
           )}
         >
-          Get started
+          Generate free blueprint
         </button>
       </SignUpButton>
     </div>
